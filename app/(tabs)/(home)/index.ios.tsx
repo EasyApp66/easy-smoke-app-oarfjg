@@ -323,33 +323,51 @@ export default function HomeScreen() {
         ) : (
           <View style={[styles.alarmsCard, { backgroundColor: cardColor }]}>
             <View style={styles.alarmsHeader}>
-              <IconSymbol
-                ios_icon_name="alarm"
-                android_material_icon_name="alarm"
-                size={20}
-                color={colors.primary}
-              />
               <Text style={styles.alarmsTitle}>
                 {isGerman ? 'Deine Wecker' : 'Your Alarms'}
               </Text>
             </View>
             
             <ScrollView style={styles.alarmsList} showsVerticalScrollIndicator={false}>
-              {alarms.map((alarm, index) => (
-                <View key={index} style={styles.alarmItem}>
-                  <View style={styles.alarmTimeContainer}>
-                    <Text style={styles.alarmTime}>{alarm}</Text>
+              {alarms.map((alarm, index) => {
+                const now = new Date();
+                const [alarmHour, alarmMinute] = alarm.split(':').map(Number);
+                const alarmDate = new Date();
+                alarmDate.setHours(alarmHour, alarmMinute, 0, 0);
+                const isUpcoming = alarmDate > now;
+                const timeDiff = Math.floor((alarmDate.getTime() - now.getTime()) / 60000);
+                const showBadge = isUpcoming && timeDiff <= 60 && timeDiff > 0;
+                const badgeText = timeDiff === 1 ? 'in 1 Min' : `in ${timeDiff} Min`;
+
+                return (
+                  <View key={index} style={[
+                    styles.alarmItem,
+                    isUpcoming && styles.alarmItemUpcoming,
+                  ]}>
+                    <View style={styles.alarmLeftContent}>
+                      <Text style={[
+                        styles.alarmTime,
+                        isUpcoming && styles.alarmTimeUpcoming,
+                      ]}>
+                        {alarm}
+                      </Text>
+                      {showBadge && (
+                        <View style={styles.alarmBadge}>
+                          <Text style={styles.alarmBadgeText}>{badgeText}</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.alarmCheckbox}>
+                      <IconSymbol
+                        ios_icon_name="checkmark"
+                        android_material_icon_name="check"
+                        size={18}
+                        color={colors.checkboxGray}
+                      />
+                    </View>
                   </View>
-                  <View style={styles.alarmCheckbox}>
-                    <IconSymbol
-                      ios_icon_name="checkmark"
-                      android_material_icon_name="check"
-                      size={16}
-                      color={colors.primary}
-                    />
-                  </View>
-                </View>
-              ))}
+                );
+              })}
             </ScrollView>
           </View>
         )}
@@ -367,7 +385,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 120,
+    paddingBottom: 140,
   },
   loadingText: {
     color: colors.text,
@@ -527,12 +545,10 @@ const styles = StyleSheet.create({
   alarmsCard: {
     borderRadius: 20,
     padding: 24,
+    minHeight: 500,
   },
   alarmsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 20,
-    gap: 10,
   },
   alarmsTitle: {
     fontSize: 22,
@@ -540,16 +556,25 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   alarmsList: {
-    maxHeight: 400,
+    flex: 1,
   },
   alarmItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.backgroundGray,
+    backgroundColor: colors.cardGray,
     borderRadius: 14,
-    padding: 16,
+    padding: 18,
     marginBottom: 12,
+  },
+  alarmItemUpcoming: {
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  alarmLeftContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   alarmTimeContainer: {
     flexDirection: 'row',
@@ -558,14 +583,30 @@ const styles = StyleSheet.create({
   alarmTime: {
     fontSize: 28,
     fontWeight: 'bold',
+    color: colors.text,
+  },
+  alarmTimeUpcoming: {
     color: colors.primary,
+  },
+  alarmBadge: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  alarmBadgeText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '600',
   },
   alarmCheckbox: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.cardGray,
+    backgroundColor: colors.backgroundGray,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.checkboxGray,
   },
 });

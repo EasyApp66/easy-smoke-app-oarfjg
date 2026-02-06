@@ -15,24 +15,24 @@ export default function TabLayout() {
             tabs={[
               {
                 name: '(home)',
-                title: '',
+                label: 'Home',
                 icon: 'home',
                 route: '/(tabs)/(home)',
               },
               {
                 name: 'stats',
-                title: '',
+                label: 'Statistik',
                 icon: 'bar-chart',
                 route: '/(tabs)/stats',
               },
               {
                 name: 'settings',
-                title: '',
+                label: 'Einstellungen',
                 icon: 'settings',
                 route: '/(tabs)/settings',
               },
             ]}
-            containerWidth={200}
+            containerWidth={240}
             borderRadius={30}
             bottomMargin={20}
           />

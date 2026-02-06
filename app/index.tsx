@@ -54,17 +54,17 @@ export default function WelcomeScreen() {
         >
           <Text style={styles.goButtonText}>{goButtonText}</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.legalButton}
-          onPress={() => {
-            console.log('Legal button tapped');
-            setShowLegal(true);
-          }}
-        >
-          <Text style={styles.legalButtonText}>{legalText}</Text>
-        </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        style={styles.legalButton}
+        onPress={() => {
+          console.log('Legal button tapped');
+          setShowLegal(true);
+        }}
+      >
+        <Text style={styles.legalButtonText}>{legalText}</Text>
+      </TouchableOpacity>
 
       <LegalModal
         visible={showLegal}
@@ -84,11 +84,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
   },
   titleContainer: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 60,
   },
   title: {
@@ -96,24 +95,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
     letterSpacing: 2,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   subtitlesContainer: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: Platform.OS === 'ios' ? 48 : 40,
   },
   subtitle: {
     fontSize: 16,
     color: colors.text,
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   goButton: {
     backgroundColor: colors.primary,
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 80,
-    marginBottom: 24,
+    alignSelf: 'flex-start',
   },
   goButtonText: {
     color: colors.text,
@@ -122,11 +121,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   legalButton: {
-    padding: 12,
+    padding: 16,
+    alignSelf: 'center',
+    marginBottom: Platform.OS === 'ios' ? 40 : 24,
   },
   legalButtonText: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: 12,
     textDecorationLine: 'underline',
   },
 });

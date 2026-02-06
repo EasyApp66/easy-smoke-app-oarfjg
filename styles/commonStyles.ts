@@ -8,13 +8,13 @@ export const colors = {
   primaryDark: '#059669',
   primaryLight: '#34D399',
   
-  // Background colors
-  backgroundGray: '#0F0F0F', // Darker gray (default)
-  backgroundBlack: '#000000', // Pure black
+  // Background colors - lighter as requested
+  backgroundGray: '#1A1A1A', // Lighter gray (was #0F0F0F)
+  backgroundBlack: '#0A0A0A', // Lighter black (was #000000)
   
-  // Card and surface colors
-  cardGray: '#1A1A1A',
-  cardBlack: '#0A0A0A',
+  // Card and surface colors - lighter
+  cardGray: '#2A2A2A', // Lighter (was #1A1A1A)
+  cardBlack: '#1A1A1A', // Lighter (was #0A0A0A)
   
   // Text colors
   text: '#FFFFFF',
@@ -28,13 +28,16 @@ export const colors = {
   error: '#EF4444',
   
   // UI elements
-  border: '#2A2A2A',
-  divider: '#2A2A2A',
+  border: '#3A3A3A',
+  divider: '#3A3A3A',
   
   // Tab bar
-  tabBarBackground: '#0F0F0F',
+  tabBarBackground: '#1A1A1A',
   tabBarActive: '#10B981',
   tabBarInactive: '#6B7280',
+  
+  // Alarm checkbox
+  checkboxGray: '#6B7280',
 };
 
 export const commonStyles = StyleSheet.create({
