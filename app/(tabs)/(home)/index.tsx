@@ -24,7 +24,7 @@ export default function HomeScreen() {
   const [cigaretteGoal, setCigaretteGoal] = useState(25);
   const [isSetup, setIsSetup] = useState(false);
   const [alarms, setAlarms] = useState<string[]>([]);
-  const [selectedDay, setSelectedDay] = useState(2); // Index of selected day
+  const [selectedDay, setSelectedDay] = useState(2);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
@@ -42,7 +42,6 @@ export default function HomeScreen() {
       setSleepMinute(sm);
       setCigaretteGoal(settings.dailyCigaretteGoal);
       
-      // Check if day is already set up
       if (currentLog && currentLog.cigarettesGoal > 0) {
         setIsSetup(true);
         calculateAlarms(settings.wakeTime, settings.sleepTime, settings.dailyCigaretteGoal);
@@ -182,9 +181,10 @@ export default function HomeScreen() {
   ];
 
   if (isLoading) {
+    const loadingText = isGerman ? 'Laden...' : 'Loading...';
     return (
       <View style={[styles.container, { backgroundColor: bgColor }]}>
-        <Text style={styles.loadingText}>Laden...</Text>
+        <Text style={styles.loadingText}>{loadingText}</Text>
       </View>
     );
   }
@@ -259,13 +259,22 @@ export default function HomeScreen() {
               <IconSymbol
                 ios_icon_name="calendar"
                 android_material_icon_name="calendar-today"
-                size={24}
+                size={32}
                 color={colors.primary}
               />
-              <Text style={styles.setupTitle}>
-                {isGerman ? 'Heute einrichten' : 'Setup Today'}
-              </Text>
+              <View>
+                <Text style={styles.setupTitle}>
+                  {isGerman ? 'Morgen einrichten' : 'Setup Tomorrow'}
+                </Text>
+                <Text style={styles.setupSubtitle}>
+                  {isGerman ? 'Lege deine Zeiten und dein Ziel fest' : 'Set your times and your goal'}
+                </Text>
+              </View>
             </View>
+
+            <Text style={styles.sectionTitle}>
+              {isGerman ? 'DEIN ZEITPLAN' : 'YOUR SCHEDULE'}
+            </Text>
 
             {/* Wake Time Picker */}
             <View style={styles.timeSection}>
@@ -273,9 +282,9 @@ export default function HomeScreen() {
                 {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
               </Text>
               <View style={styles.pickerRow}>
-                {renderScrollPicker(wakeHour, setWakeHour, 0, 23, 'Std')}
+                {renderScrollPicker(wakeHour, setWakeHour, 0, 23, '')}
                 <Text style={styles.pickerSeparator}>:</Text>
-                {renderScrollPicker(wakeMinute, setWakeMinute, 0, 59, 'Min')}
+                {renderScrollPicker(wakeMinute, setWakeMinute, 0, 59, '')}
               </View>
             </View>
 
@@ -285,9 +294,9 @@ export default function HomeScreen() {
                 {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
               </Text>
               <View style={styles.pickerRow}>
-                {renderScrollPicker(sleepHour, setSleepHour, 0, 23, 'Std')}
+                {renderScrollPicker(sleepHour, setSleepHour, 0, 23, '')}
                 <Text style={styles.pickerSeparator}>:</Text>
-                {renderScrollPicker(sleepMinute, setSleepMinute, 0, 59, 'Min')}
+                {renderScrollPicker(sleepMinute, setSleepMinute, 0, 59, '')}
               </View>
             </View>
 
@@ -296,8 +305,11 @@ export default function HomeScreen() {
               <Text style={styles.label}>
                 {isGerman ? 'TAGESZIEL ZIGARETTEN' : 'DAILY CIGARETTE GOAL'}
               </Text>
+              <Text style={styles.goalSubtitle}>
+                {isGerman ? 'Zigaretten pro Tag' : 'Cigarettes per day'}
+              </Text>
               <View style={styles.goalPickerContainer}>
-                {renderScrollPicker(cigaretteGoal, setCigaretteGoal, 1, 50, 'Stk')}
+                {renderScrollPicker(cigaretteGoal, setCigaretteGoal, 1, 50, '')}
               </View>
             </View>
 
@@ -355,7 +367,6 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      {/* Toast Notification */}
       <Toast
         message={toastMessage}
         type={toastType}
@@ -453,19 +464,31 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   setupCard: {
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 24,
   },
   setupHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 24,
-    gap: 12,
+    gap: 16,
   },
   setupTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
+  },
+  setupSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    letterSpacing: 1,
+    marginBottom: 20,
   },
   timeSection: {
     marginBottom: 24,
@@ -502,10 +525,10 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 12,
   },
   pickerItemActive: {
     backgroundColor: colors.primary,
-    borderRadius: 8,
   },
   pickerItemText: {
     fontSize: 24,
@@ -524,6 +547,12 @@ const styles = StyleSheet.create({
   },
   goalSection: {
     marginBottom: 32,
+  },
+  goalSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 16,
   },
   goalPickerContainer: {
     alignItems: 'center',

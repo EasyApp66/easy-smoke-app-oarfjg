@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { colors } from '@/styles/commonStyles';
 import { LegalModal } from '@/components/LegalModal';
 
 export default function WelcomeScreen() {
@@ -77,7 +76,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#0D4D3D', // Darker green background
   },
   content: {
     flex: 1,
@@ -92,7 +91,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#FFFFFF',
     letterSpacing: 2,
   },
   featuresContainer: {
@@ -103,20 +102,20 @@ const styles = StyleSheet.create({
   feature: {
     fontSize: 20,
     fontWeight: '600',
-    color: colors.text,
+    color: '#FFFFFF',
     opacity: 0.95,
   },
   bottomContainer: {
     gap: 24,
   },
   button: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#10B981',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
   },
   buttonText: {
-    color: colors.text,
+    color: '#FFFFFF',
     fontSize: 24,
     fontWeight: 'bold',
     letterSpacing: 2,
@@ -126,7 +125,7 @@ const styles = StyleSheet.create({
   },
   legalText: {
     fontSize: 12,
-    color: colors.text,
+    color: '#FFFFFF',
     opacity: 0.6,
     textAlign: 'center',
     textDecorationLine: 'underline',

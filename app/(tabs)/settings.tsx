@@ -15,7 +15,6 @@ import { colors } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
 import { IconSymbol } from '@/components/IconSymbol';
 import { LegalModal } from '@/components/LegalModal';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Toast } from '@/components/ui/Toast';
@@ -27,11 +26,11 @@ export default function SettingsScreen() {
   const [showLegal, setShowLegal] = useState(false);
   const [showPromoInput, setShowPromoInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
-  const [showWakePicker, setShowWakePicker] = useState(false);
-  const [showSleepPicker, setShowSleepPicker] = useState(false);
-  const [wakeTime, setWakeTime] = useState(new Date());
-  const [sleepTime, setSleepTime] = useState(new Date());
-  const [cigaretteGoal, setCigaretteGoal] = useState(20);
+  const [wakeHour, setWakeHour] = useState(6);
+  const [wakeMinute, setWakeMinute] = useState(0);
+  const [sleepHour, setSleepHour] = useState(22);
+  const [sleepMinute, setSleepMinute] = useState(0);
+  const [cigaretteGoal, setCigaretteGoal] = useState(25);
   const [applyToAllDays, setApplyToAllDays] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -40,17 +39,13 @@ export default function SettingsScreen() {
 
   React.useEffect(() => {
     if (settings) {
-      const [wakeHour, wakeMin] = settings.wakeTime.split(':').map(Number);
-      const [sleepHour, sleepMin] = settings.sleepTime.split(':').map(Number);
+      const [wh, wm] = settings.wakeTime.split(':').map(Number);
+      const [sh, sm] = settings.sleepTime.split(':').map(Number);
       
-      const wake = new Date();
-      wake.setHours(wakeHour, wakeMin, 0, 0);
-      setWakeTime(wake);
-      
-      const sleep = new Date();
-      sleep.setHours(sleepHour, sleepMin, 0, 0);
-      setSleepTime(sleep);
-      
+      setWakeHour(wh);
+      setWakeMinute(wm);
+      setSleepHour(sh);
+      setSleepMinute(sm);
       setCigaretteGoal(settings.dailyCigaretteGoal);
     }
   }, [settings]);
@@ -95,10 +90,51 @@ export default function SettingsScreen() {
     router.replace('/');
   };
 
-  const formatTime = (date: Date) => {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+  const renderScrollPicker = (
+    value: number,
+    onChange: (val: number) => void,
+    min: number,
+    max: number
+  ) => {
+    const items = [];
+    for (let i = min; i <= max; i++) {
+      items.push(i);
+    }
+    
+    return (
+      <View style={styles.pickerColumn}>
+        <ScrollView
+          style={styles.pickerScroll}
+          contentContainerStyle={styles.pickerContent}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={50}
+          decelerationRate="fast"
+        >
+          {items.map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.pickerItem,
+                value === item && styles.pickerItemActive,
+              ]}
+              onPress={() => {
+                onChange(item);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Text
+                style={[
+                  styles.pickerItemText,
+                  value === item && styles.pickerItemTextActive,
+                ]}
+              >
+                {item.toString().padStart(2, '0')}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
   };
 
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;
@@ -106,10 +142,13 @@ export default function SettingsScreen() {
   const isGerman = settings?.language === 'de';
 
   const titleText = isGerman ? 'Einstellungen' : 'Settings';
-  const morningSetupText = isGerman ? 'Morgen einrichten' : 'Morning Setup';
+  const morningSetupText = isGerman ? 'Morgen einrichten' : 'Setup Tomorrow';
+  const morningSetupSubtitle = isGerman ? 'Lege deine Zeiten und dein Ziel fest' : 'Set your times and your goal';
+  const sectionTitleText = isGerman ? 'DEIN ZEITPLAN' : 'YOUR SCHEDULE';
   const wakeTimeLabel = isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME';
   const sleepTimeLabel = isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME';
   const dailyGoalLabel = isGerman ? 'TAGESZIEL ZIGARETTEN' : 'DAILY CIGARETTE GOAL';
+  const goalSubtitleText = isGerman ? 'Zigaretten pro Tag' : 'Cigarettes per day';
   const scheduleAllDaysText = isGerman ? 'Zeitplan für alle Tage' : 'Schedule for all days';
   const applyAllDaysText = isGerman ? 'Änderungen auf alle Tage\nanwenden' : 'Apply changes to all days';
   const appearanceText = isGerman ? 'DARSTELLUNG' : 'APPEARANCE';
@@ -130,10 +169,6 @@ export default function SettingsScreen() {
   const cancelText = isGerman ? 'Abbrechen' : 'Cancel';
   const confirmText = isGerman ? 'Abmelden' : 'Sign Out';
 
-  const wakeTimeDisplay = formatTime(wakeTime);
-  const sleepTimeDisplay = formatTime(sleepTime);
-  const cigaretteGoalDisplay = cigaretteGoal.toString();
-
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
       <ScrollView
@@ -143,61 +178,46 @@ export default function SettingsScreen() {
       >
         <Text style={styles.title}>{titleText}</Text>
 
-        <View style={[styles.card, { backgroundColor: cardColor }]}>
-          <View style={styles.cardHeader}>
+        {/* Morgen einrichten - Same design as home page */}
+        <View style={[styles.setupCard, { backgroundColor: cardColor }]}>
+          <View style={styles.setupHeader}>
             <IconSymbol
               ios_icon_name="calendar"
               android_material_icon_name="calendar-today"
-              size={24}
+              size={32}
               color={colors.primary}
             />
-            <Text style={styles.cardTitle}>{morningSetupText}</Text>
+            <View>
+              <Text style={styles.setupTitle}>{morningSetupText}</Text>
+              <Text style={styles.setupSubtitle}>{morningSetupSubtitle}</Text>
+            </View>
           </View>
+
+          <Text style={styles.sectionTitle}>{sectionTitleText}</Text>
 
           <View style={styles.timeSection}>
             <Text style={styles.label}>{wakeTimeLabel}</Text>
-            <TouchableOpacity
-              style={styles.timeButton}
-              onPress={() => setShowWakePicker(true)}
-            >
-              <Text style={styles.timeValue}>{wakeTimeDisplay}</Text>
-            </TouchableOpacity>
+            <View style={styles.pickerRow}>
+              {renderScrollPicker(wakeHour, setWakeHour, 0, 23)}
+              <Text style={styles.pickerSeparator}>:</Text>
+              {renderScrollPicker(wakeMinute, setWakeMinute, 0, 59)}
+            </View>
           </View>
 
           <View style={styles.timeSection}>
             <Text style={styles.label}>{sleepTimeLabel}</Text>
-            <TouchableOpacity
-              style={styles.timeButton}
-              onPress={() => setShowSleepPicker(true)}
-            >
-              <Text style={styles.timeValue}>{sleepTimeDisplay}</Text>
-            </TouchableOpacity>
+            <View style={styles.pickerRow}>
+              {renderScrollPicker(sleepHour, setSleepHour, 0, 23)}
+              <Text style={styles.pickerSeparator}>:</Text>
+              {renderScrollPicker(sleepMinute, setSleepMinute, 0, 59)}
+            </View>
           </View>
 
           <View style={styles.goalSection}>
             <Text style={styles.label}>{dailyGoalLabel}</Text>
-            <View style={styles.goalControls}>
-              <TouchableOpacity
-                style={styles.goalButton}
-                onPress={() => {
-                  if (cigaretteGoal > 1) {
-                    setCigaretteGoal(cigaretteGoal - 1);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                }}
-              >
-                <Text style={styles.goalButtonText}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.goalValue}>{cigaretteGoalDisplay}</Text>
-              <TouchableOpacity
-                style={styles.goalButton}
-                onPress={() => {
-                  setCigaretteGoal(cigaretteGoal + 1);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-              >
-                <Text style={styles.goalButtonText}>+</Text>
-              </TouchableOpacity>
+            <Text style={styles.goalSubtitle}>{goalSubtitleText}</Text>
+            <View style={styles.goalPickerContainer}>
+              {renderScrollPicker(cigaretteGoal, setCigaretteGoal, 1, 50)}
             </View>
           </View>
         </View>
@@ -262,11 +282,11 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
-            console.log('Sign out tapped');
-            setShowSignOutConfirm(true);
+            console.log('Promo code tapped');
+            setShowPromoInput(true);
           }}
         >
-          <Text style={styles.settingTitle}>{signOutText}</Text>
+          <Text style={styles.settingTitle}>{promoCodeText}</Text>
           <IconSymbol
             ios_icon_name="chevron.right"
             android_material_icon_name="chevron-right"
@@ -294,11 +314,11 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
-            console.log('Promo code tapped');
-            setShowPromoInput(true);
+            console.log('Sign out tapped');
+            setShowSignOutConfirm(true);
           }}
         >
-          <Text style={styles.settingTitle}>{promoCodeText}</Text>
+          <Text style={styles.settingTitle}>{signOutText}</Text>
           <IconSymbol
             ios_icon_name="chevron.right"
             android_material_icon_name="chevron-right"
@@ -381,94 +401,6 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {showWakePicker && (
-        <Modal
-          transparent
-          animationType="fade"
-          visible={showWakePicker}
-          onRequestClose={() => setShowWakePicker(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowWakePicker(false)}
-          >
-            <BlurView intensity={80} style={styles.blurView}>
-              <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={wakeTime}
-                  mode="time"
-                  display="spinner"
-                  onChange={(event, selectedDate) => {
-                    if (selectedDate) {
-                      setWakeTime(selectedDate);
-                    }
-                    if (Platform.OS === 'android') {
-                      setShowWakePicker(false);
-                    }
-                  }}
-                  textColor={colors.text}
-                />
-                {Platform.OS === 'ios' && (
-                  <TouchableOpacity
-                    style={styles.doneButton}
-                    onPress={() => setShowWakePicker(false)}
-                  >
-                    <Text style={styles.doneButtonText}>
-                      {isGerman ? 'Fertig' : 'Done'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </BlurView>
-          </TouchableOpacity>
-        </Modal>
-      )}
-
-      {showSleepPicker && (
-        <Modal
-          transparent
-          animationType="fade"
-          visible={showSleepPicker}
-          onRequestClose={() => setShowSleepPicker(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowSleepPicker(false)}
-          >
-            <BlurView intensity={80} style={styles.blurView}>
-              <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={sleepTime}
-                  mode="time"
-                  display="spinner"
-                  onChange={(event, selectedDate) => {
-                    if (selectedDate) {
-                      setSleepTime(selectedDate);
-                    }
-                    if (Platform.OS === 'android') {
-                      setShowSleepPicker(false);
-                    }
-                  }}
-                  textColor={colors.text}
-                />
-                {Platform.OS === 'ios' && (
-                  <TouchableOpacity
-                    style={styles.doneButton}
-                    onPress={() => setShowSleepPicker(false)}
-                  >
-                    <Text style={styles.doneButtonText}>
-                      {isGerman ? 'Fertig' : 'Done'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </BlurView>
-          </TouchableOpacity>
-        </Modal>
-      )}
-
       <Toast
         message={toastMessage}
         type={toastType}
@@ -498,24 +430,36 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 24,
   },
-  card: {
-    borderRadius: 20,
+  setupCard: {
+    borderRadius: 24,
     padding: 24,
     marginBottom: 16,
   },
-  cardHeader: {
+  setupHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 24,
-    gap: 12,
+    gap: 16,
   },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+  setupTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: colors.text,
   },
-  timeSection: {
+  setupSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    letterSpacing: 1,
     marginBottom: 20,
+  },
+  timeSection: {
+    marginBottom: 24,
   },
   label: {
     fontSize: 12,
@@ -524,45 +468,67 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 12,
   },
-  timeButton: {
-    backgroundColor: colors.backgroundGray,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  timeValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  goalSection: {
-    marginTop: 8,
-  },
-  goalControls: {
+  pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 24,
+    gap: 8,
   },
-  goalButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.backgroundGray,
+  pickerColumn: {
     alignItems: 'center',
+  },
+  pickerScroll: {
+    height: 150,
+    width: 80,
+  },
+  pickerContent: {
+    paddingVertical: 50,
+  },
+  pickerItem: {
+    height: 50,
     justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
   },
-  goalButtonText: {
+  pickerItemActive: {
+    backgroundColor: colors.primary,
+  },
+  pickerItemText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.primary,
+    color: colors.textSecondary,
   },
-  goalValue: {
-    fontSize: 36,
+  pickerItemTextActive: {
+    fontSize: 32,
     fontWeight: 'bold',
-    color: colors.primary,
-    minWidth: 60,
+    color: colors.text,
+  },
+  pickerSeparator: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginHorizontal: 8,
+  },
+  goalSection: {
+    marginBottom: 16,
+  },
+  goalSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
     textAlign: 'center',
+    marginBottom: 16,
+  },
+  goalPickerContainer: {
+    alignItems: 'center',
+  },
+  card: {
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
   },
   sectionLabel: {
     fontSize: 12,
@@ -704,24 +670,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  pickerContainer: {
-    backgroundColor: colors.cardGray,
-    borderRadius: 20,
-    padding: 20,
-    width: '80%',
-  },
-  doneButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  doneButtonText: {
     color: colors.text,
     fontSize: 16,
     fontWeight: '600',

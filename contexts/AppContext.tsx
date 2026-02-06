@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 interface AppSettings {
   deviceId: string;
@@ -11,6 +12,8 @@ interface AppSettings {
   language: 'de' | 'en';
   backgroundColor: 'gray' | 'black';
   premiumEnabled: boolean;
+  premiumType?: 'monthly' | 'lifetime';
+  premiumExpiry?: string;
   promoCode?: string;
 }
 
@@ -33,6 +36,31 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Web-compatible storage wrapper
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    }
+    return SecureStore.getItemAsync(key);
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      try {
+        localStorage.setItem(key, value);
+      } catch (error) {
+        console.error('Error saving to localStorage:', error);
+      }
+      return;
+    }
+    return SecureStore.setItemAsync(key, value);
+  },
+};
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [currentLog, setCurrentLog] = useState<SmokingLog | null>(null);
@@ -41,10 +69,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Generate or retrieve device ID
   const getDeviceId = async (): Promise<string> => {
     try {
-      let deviceId = await SecureStore.getItemAsync('deviceId');
+      let deviceId = await storage.getItem('deviceId');
       if (!deviceId) {
         deviceId = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        await SecureStore.setItemAsync('deviceId', deviceId);
+        await storage.setItem('deviceId', deviceId);
       }
       return deviceId;
     } catch (error) {
@@ -64,7 +92,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const deviceId = await getDeviceId();
       
       // Try to load from local storage first (offline support)
-      const storedSettings = await SecureStore.getItemAsync('appSettings');
+      const storedSettings = await storage.getItem('appSettings');
       if (storedSettings) {
         const parsed = JSON.parse(storedSettings);
         setSettings({ ...parsed, deviceId });
@@ -84,11 +112,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
             language: serverSettings.language as 'de' | 'en',
             backgroundColor: serverSettings.backgroundColor as 'gray' | 'black',
             premiumEnabled: serverSettings.premiumEnabled,
+            premiumType: serverSettings.premiumType as 'monthly' | 'lifetime' | undefined,
+            premiumExpiry: serverSettings.premiumExpiry,
             promoCode: serverSettings.promoCode || undefined,
           };
           
           setSettings(settingsData);
-          await SecureStore.setItemAsync('appSettings', JSON.stringify(settingsData));
+          await storage.setItem('appSettings', JSON.stringify(settingsData));
           console.log('[AppContext] Settings synced from server');
         }
       } catch (error) {
@@ -97,7 +127,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       // Load today's log
       const today = new Date().toISOString().split('T')[0];
-      const storedLog = await SecureStore.getItemAsync(`log_${today}`);
+      const storedLog = await storage.getItem(`log_${today}`);
       if (storedLog) {
         setCurrentLog(JSON.parse(storedLog));
       }
@@ -115,7 +145,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           };
           
           setCurrentLog(logData);
-          await SecureStore.setItemAsync(`log_${today}`, JSON.stringify(logData));
+          await storage.setItem(`log_${today}`, JSON.stringify(logData));
           console.log('[AppContext] Log synced from server');
         }
       } catch (error) {
@@ -136,9 +166,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // If settings don't exist yet, create them with defaults
       const currentSettings = settings || {
         deviceId,
-        wakeTime: '08:00',
+        wakeTime: '06:00',
         sleepTime: '22:00',
-        dailyCigaretteGoal: 20,
+        dailyCigaretteGoal: 25,
         language: 'de' as 'de' | 'en',
         backgroundColor: 'gray' as 'gray' | 'black',
         premiumEnabled: false,
@@ -147,7 +177,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const updated = { ...currentSettings, ...newSettings, deviceId } as AppSettings;
       
       // Save locally first (offline support)
-      await SecureStore.setItemAsync('appSettings', JSON.stringify(updated));
+      await storage.setItem('appSettings', JSON.stringify(updated));
       setSettings(updated);
 
       // Update settings on server
@@ -211,7 +241,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         cigarettesGoal: goal,
       };
       
-      await SecureStore.setItemAsync(`log_${today}`, JSON.stringify(newLog));
+      await storage.setItem(`log_${today}`, JSON.stringify(newLog));
       setCurrentLog(newLog);
 
       // Create log on server
@@ -230,7 +260,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       
       // Calculate and save alarm times
       const alarmTimes = calculateAlarmTimes(wakeTime, sleepTime, goal);
-      await SecureStore.setItemAsync(`alarms_${today}`, JSON.stringify(alarmTimes));
+      await storage.setItem(`alarms_${today}`, JSON.stringify(alarmTimes));
       
       // Save alarms on server
       try {
@@ -262,7 +292,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       
       const today = new Date().toISOString().split('T')[0];
-      await SecureStore.setItemAsync(`log_${today}`, JSON.stringify(updated));
+      await storage.setItem(`log_${today}`, JSON.stringify(updated));
       setCurrentLog(updated);
 
       // Increment on server
@@ -284,17 +314,63 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const validatePromoCode = async (code: string): Promise<boolean> => {
     try {
       const deviceId = await getDeviceId();
+      const trimmedCode = code.trim();
       
-      // Validate promo code on server
-      const { validatePromoCode: validateOnServer } = await import('@/utils/api');
-      const result = await validateOnServer(code, deviceId);
+      // Offline promo code validation
+      let premiumEnabled = false;
+      let premiumType: 'monthly' | 'lifetime' | undefined;
+      let premiumExpiry: string | undefined;
       
-      if (result.valid && result.premiumEnabled) {
-        await updateSettings({ promoCode: code, premiumEnabled: true });
-        console.log('[AppContext] Promo code validated successfully:', code);
+      if (trimmedCode === 'EASY EASY') {
+        premiumEnabled = true;
+        premiumType = 'monthly';
+        const expiryDate = new Date();
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+        premiumExpiry = expiryDate.toISOString();
+        console.log('[AppContext] Promo code "EASY EASY" activated - 1 month premium');
+      } else if (trimmedCode === 'Easy22') {
+        premiumEnabled = true;
+        premiumType = 'lifetime';
+        premiumExpiry = undefined;
+        console.log('[AppContext] Promo code "Easy22" activated - lifetime premium');
+      }
+      
+      if (premiumEnabled) {
+        // Save locally
+        await updateSettings({ 
+          promoCode: trimmedCode, 
+          premiumEnabled: true,
+          premiumType,
+          premiumExpiry,
+        });
+        
+        // Try to validate on server as well
+        try {
+          const { validatePromoCode: validateOnServer } = await import('@/utils/api');
+          await validateOnServer(trimmedCode, deviceId);
+          console.log('[AppContext] Promo code also validated on server');
+        } catch (error) {
+          console.log('[AppContext] Could not validate on server, but local activation successful');
+        }
+        
         return true;
-      } else {
-        console.log('[AppContext] Invalid promo code:', result.message);
+      }
+      
+      // If not a known offline code, try server validation
+      try {
+        const { validatePromoCode: validateOnServer } = await import('@/utils/api');
+        const result = await validateOnServer(trimmedCode, deviceId);
+        
+        if (result.valid && result.premiumEnabled) {
+          await updateSettings({ promoCode: trimmedCode, premiumEnabled: true });
+          console.log('[AppContext] Promo code validated successfully on server:', trimmedCode);
+          return true;
+        } else {
+          console.log('[AppContext] Invalid promo code:', result.message);
+          return false;
+        }
+      } catch (error) {
+        console.error('Error validating promo code on server:', error);
         return false;
       }
     } catch (error) {
