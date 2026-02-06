@@ -32,6 +32,8 @@ interface AppContextType {
   setupDay: (wakeTime: string, sleepTime: string, goal: number) => Promise<void>;
   validatePromoCode: (code: string) => Promise<boolean>;
   getDeviceId: () => Promise<string>;
+  getLogForSpecificDate: (date: string) => Promise<SmokingLog | null>;
+  saveLogForDate: (date: string, wakeTime: string, sleepTime: string, goal: number) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -282,6 +284,102 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const getLogForSpecificDate = async (date: string): Promise<SmokingLog | null> => {
+    try {
+      // Try local storage first
+      const storedLog = await storage.getItem(`log_${date}`);
+      if (storedLog) {
+        return JSON.parse(storedLog);
+      }
+
+      // Try server
+      try {
+        const deviceId = await getDeviceId();
+        const { getLogForDate } = await import('@/utils/api');
+        const serverLog = await getLogForDate(deviceId, date);
+        
+        if (serverLog) {
+          const logData: SmokingLog = {
+            date: serverLog.date,
+            cigarettesSmoked: serverLog.cigarettesSmoked,
+            cigarettesGoal: serverLog.cigarettesGoal,
+          };
+          
+          // Cache it locally
+          await storage.setItem(`log_${date}`, JSON.stringify(logData));
+          return logData;
+        }
+      } catch (error) {
+        console.log('[AppContext] Could not fetch log for date from server:', date);
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error getting log for specific date:', error);
+      return null;
+    }
+  };
+
+  const saveLogForDate = async (date: string, wakeTime: string, sleepTime: string, goal: number) => {
+    try {
+      const deviceId = await getDeviceId();
+      
+      // Update settings if needed
+      await updateSettings({ wakeTime, sleepTime, dailyCigaretteGoal: goal });
+      
+      // Create log for the specific date
+      const newLog: SmokingLog = {
+        date,
+        cigarettesSmoked: 0,
+        cigarettesGoal: goal,
+      };
+      
+      await storage.setItem(`log_${date}`, JSON.stringify(newLog));
+      
+      // If it's today, update currentLog
+      const today = new Date().toISOString().split('T')[0];
+      if (date === today) {
+        setCurrentLog(newLog);
+      }
+
+      // Create log on server
+      try {
+        const { createOrUpdateLog } = await import('@/utils/api');
+        await createOrUpdateLog({
+          deviceId,
+          date,
+          cigarettesSmoked: 0,
+          cigarettesGoal: goal,
+        });
+        console.log('[AppContext] Log created on server for date:', date);
+      } catch (error) {
+        console.error('[AppContext] Failed to create log on server:', error);
+      }
+      
+      // Calculate and save alarm times
+      const alarmTimes = calculateAlarmTimes(wakeTime, sleepTime, goal);
+      await storage.setItem(`alarms_${date}`, JSON.stringify(alarmTimes));
+      
+      // Save alarms on server
+      try {
+        const { saveAlarms } = await import('@/utils/api');
+        await saveAlarms({
+          deviceId,
+          date,
+          alarmTimes,
+        });
+        console.log('[AppContext] Alarms saved on server for date:', date);
+      } catch (error) {
+        console.error('[AppContext] Failed to save alarms on server:', error);
+      }
+      
+      console.log('Day setup complete for date:', date);
+    } catch (error) {
+      console.error('Error saving log for date:', error);
+      throw error;
+    }
+  };
+
   const incrementCigarettes = async () => {
     if (!currentLog) return;
     
@@ -415,6 +513,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setupDay,
         validatePromoCode,
         getDeviceId,
+        getLogForSpecificDate,
+        saveLogForDate,
       }}
     >
       {children}

@@ -11,12 +11,18 @@ export const translations = {
     
     // Home screen
     homeTitle: 'Heute einrichten',
+    todaySetup: 'Heute einrichten',
+    tomorrowSetup: 'Morgen einrichten',
+    yesterdaySetup: 'Gestern eingerichtet',
+    pastDaySetup: 'Vergangener Tag',
+    futureDaySetup: 'Zukünftiger Tag',
     wakeTime: 'AUFSTEHZEIT',
     sleepTime: 'SCHLAFENSZEIT',
     dailyGoal: 'TAGESZIEL ZIGARETTEN',
     setupButton: 'Tag einrichten',
     readyWhenYouAre: 'Bereit wenn du es bist',
     cigarettesCount: '0/0',
+    alreadySetup: 'Bereits eingerichtet',
     
     // Stats screen
     statsTitle: 'Statistik',
@@ -79,12 +85,18 @@ export const translations = {
     
     // Home screen
     homeTitle: 'Setup Today',
+    todaySetup: 'Setup Today',
+    tomorrowSetup: 'Setup Tomorrow',
+    yesterdaySetup: 'Setup Yesterday',
+    pastDaySetup: 'Past Day',
+    futureDaySetup: 'Future Day',
     wakeTime: 'WAKE TIME',
     sleepTime: 'SLEEP TIME',
     dailyGoal: 'DAILY CIGARETTE GOAL',
     setupButton: 'Setup Day',
     readyWhenYouAre: 'Ready when you are',
     cigarettesCount: '0/0',
+    alreadySetup: 'Already set up',
     
     // Stats screen
     statsTitle: 'Statistics',
