@@ -1,67 +1,69 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  Dimensions,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { colors } from '@/styles/commonStyles';
 import { LegalModal } from '@/components/LegalModal';
+import * as Haptics from 'expo-haptics';
+
+const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const [showLegal, setShowLegal] = useState(false);
 
-  const handleContinue = async () => {
-    console.log('User tapped GO button - navigating to home');
-    router.replace('/(tabs)');
+  const handleContinue = () => {
+    console.log('User tapped Go button');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.replace('/(tabs)/(home)');
   };
 
-  const titleLine1 = 'BE SMART';
-  const titleLine2 = 'SMOKE LESS';
-  const subtitle1 = 'Lege deine Wach-Zeiten fest';
-  const subtitle2 = 'Wähle dein Tagesziel';
-  const subtitle3 = 'Erhalte sanfte Erinnerungen';
-  const buttonText = 'GO';
-  const legalLine1 = 'Durch Fortfahren akzeptieren Sie unsere';
-  const legalLine2 = 'Nutzungsbedingungen (AGB),';
-  const legalLine3 = 'Datenschutzerklärung und rechtlichen';
-  const legalLine4 = 'Bedingungen';
+  const beSmartText = 'BE SMART';
+  const smokeLessText = 'SMOKE LESS';
+  const subtitle1Text = 'Lege deine Wachzeiten fest';
+  const subtitle2Text = 'Wähle dein Tagesziel';
+  const subtitle3Text = 'Erhalte sanfte Erinnerungen';
+  const goButtonText = 'GO';
+  const legalText = 'Rechtliches';
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{titleLine1}</Text>
-          <Text style={styles.title}>{titleLine2}</Text>
+          <Text style={styles.title}>{beSmartText}</Text>
+          <Text style={styles.title}>{smokeLessText}</Text>
         </View>
 
-        <View style={styles.featuresContainer}>
-          <Text style={styles.feature}>{subtitle1}</Text>
-          <Text style={styles.feature}>{subtitle2}</Text>
-          <Text style={styles.feature}>{subtitle3}</Text>
+        <View style={styles.subtitlesContainer}>
+          <Text style={styles.subtitle}>{subtitle1Text}</Text>
+          <Text style={styles.subtitle}>{subtitle2Text}</Text>
+          <Text style={styles.subtitle}>{subtitle3Text}</Text>
         </View>
 
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleContinue}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>{buttonText}</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.goButton}
+          onPress={handleContinue}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.goButtonText}>{goButtonText}</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => {
-              console.log('User tapped legal text - showing legal modal');
-              setShowLegal(true);
-            }}
-            activeOpacity={0.7}
-          >
-            <View style={styles.legalContainer}>
-              <Text style={styles.legalText}>{legalLine1}</Text>
-              <Text style={styles.legalText}>{legalLine2}</Text>
-              <Text style={styles.legalText}>{legalLine3}</Text>
-              <Text style={styles.legalText}>{legalLine4}</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.legalButton}
+          onPress={() => {
+            console.log('Legal button tapped');
+            setShowLegal(true);
+          }}
+        >
+          <Text style={styles.legalButtonText}>{legalText}</Text>
+        </TouchableOpacity>
       </View>
 
       <LegalModal
@@ -76,58 +78,55 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0D4D3D', // Darker green background
+    backgroundColor: '#0A4D2E',
+    paddingTop: Platform.OS === 'android' ? 48 : 0,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 32,
-    paddingTop: 100,
-    paddingBottom: 60,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
   },
   titleContainer: {
+    alignItems: 'center',
     marginBottom: 60,
   },
   title: {
-    fontSize: 48,
+    fontSize: width < 380 ? 36 : 42,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.text,
     letterSpacing: 2,
-  },
-  featuresContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    gap: 24,
-  },
-  feature: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    opacity: 0.95,
-  },
-  bottomContainer: {
-    gap: 24,
-  },
-  button: {
-    backgroundColor: '#10B981',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    letterSpacing: 2,
-  },
-  legalContainer: {
-    alignItems: 'center',
-  },
-  legalText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    opacity: 0.6,
     textAlign: 'center',
+  },
+  subtitlesContainer: {
+    alignItems: 'center',
+    marginBottom: Platform.OS === 'ios' ? 48 : 40,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  goButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 80,
+    marginBottom: 24,
+  },
+  goButtonText: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  legalButton: {
+    padding: 12,
+  },
+  legalButtonText: {
+    color: colors.text,
+    fontSize: 14,
     textDecorationLine: 'underline',
   },
 });

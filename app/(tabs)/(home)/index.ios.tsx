@@ -17,16 +17,15 @@ export default function HomeScreen() {
   const { settings, currentLog, setupDay, incrementCigarettes, isLoading, getLogForSpecificDate, saveLogForDate } = useApp();
   const [wakeHour, setWakeHour] = useState(6);
   const [wakeMinute, setWakeMinute] = useState(0);
-  const [sleepHour, setSleepHour] = useState(22);
+  const [sleepHour, setSleepHour] = useState(23);
   const [sleepMinute, setSleepMinute] = useState(0);
-  const [cigaretteGoal, setCigaretteGoal] = useState(25);
+  const [cigaretteGoal, setCigaretteGoal] = useState(20);
   const [isSetup, setIsSetup] = useState(false);
   const [alarms, setAlarms] = useState<string[]>([]);
   const [selectedDay, setSelectedDay] = useState(2);
 
   const dayAnimation = useRef(new Animated.Value(0)).current;
 
-  // Calculate dates for calendar
   const getDatesForCalendar = () => {
     const today = new Date();
     const dates = [];
@@ -40,7 +39,6 @@ export default function HomeScreen() {
 
   const calendarDates = getDatesForCalendar();
 
-  // Get dynamic title based on selected day
   const getDynamicTitle = () => {
     const isGerman = settings?.language === 'de';
     const offset = selectedDay - 2;
@@ -198,8 +196,8 @@ export default function HomeScreen() {
   const readyText = isGerman ? 'Bereit wenn du es bist' : 'Ready when you are';
 
   const dayNames = isGerman 
-    ? ['Fr', 'Sa', 'So', 'Mo', 'Di']
-    : ['Fri', 'Sat', 'Sun', 'Mon', 'Tue'];
+    ? ['Mi', 'Do', 'Fr', 'Sa', 'So']
+    : ['Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const days = calendarDates.map((date, index) => ({
     number: date.getDate().toString(),
@@ -275,35 +273,35 @@ export default function HomeScreen() {
               <Text style={styles.setupTitle}>{dynamicTitle}</Text>
             </View>
 
-            <View style={styles.compactTimeRow}>
-              <View style={styles.compactTimeSection}>
-                <Text style={styles.compactLabel}>
-                  {isGerman ? 'AUFSTEHEN' : 'WAKE'}
+            <View style={styles.timeRow}>
+              <View style={styles.timeSection}>
+                <Text style={styles.timeLabel}>
+                  {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
                 </Text>
-                <View style={styles.compactPickerRow}>
+                <View style={styles.timePickerRow}>
                   {renderScrollPicker(wakeHour, setWakeHour, 0, 23, '')}
-                  <Text style={styles.compactSeparator}>:</Text>
+                  <Text style={styles.timeSeparator}>:</Text>
                   {renderScrollPicker(wakeMinute, setWakeMinute, 0, 59, '')}
                 </View>
               </View>
 
-              <View style={styles.compactTimeSection}>
-                <Text style={styles.compactLabel}>
-                  {isGerman ? 'SCHLAFEN' : 'SLEEP'}
+              <View style={styles.timeSection}>
+                <Text style={styles.timeLabel}>
+                  {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
                 </Text>
-                <View style={styles.compactPickerRow}>
+                <View style={styles.timePickerRow}>
                   {renderScrollPicker(sleepHour, setSleepHour, 0, 23, '')}
-                  <Text style={styles.compactSeparator}>:</Text>
+                  <Text style={styles.timeSeparator}>:</Text>
                   {renderScrollPicker(sleepMinute, setSleepMinute, 0, 59, '')}
                 </View>
               </View>
             </View>
 
-            <View style={styles.compactGoalSection}>
-              <Text style={styles.compactLabel}>
-                {isGerman ? 'TAGESZIEL' : 'DAILY GOAL'}
+            <View style={styles.goalSection}>
+              <Text style={styles.goalLabel}>
+                {isGerman ? 'TAGESZIEL ZIGARETTEN' : 'DAILY CIGARETTE GOAL'}
               </Text>
-              <View style={styles.compactGoalPicker}>
+              <View style={styles.goalPicker}>
                 {renderScrollPicker(cigaretteGoal, setCigaretteGoal, 1, 50, '')}
               </View>
             </View>
@@ -380,14 +378,14 @@ const styles = StyleSheet.create({
   calendarContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
     paddingHorizontal: 4,
   },
   dayButton: {
     alignItems: 'center',
-    padding: 10,
-    borderRadius: 12,
-    minWidth: 48,
+    padding: 12,
+    borderRadius: 16,
+    minWidth: 56,
     backgroundColor: 'transparent',
   },
   dayButtonActive: {
@@ -399,85 +397,92 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   dayNumber: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   dayNumberActive: {
     color: colors.text,
   },
   dayName: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textSecondary,
   },
   dayNameActive: {
     color: colors.text,
   },
   countCard: {
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 20,
+    padding: 32,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   countValue: {
-    fontSize: 56,
+    fontSize: 72,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   countLabel: {
-    fontSize: 14,
+    fontSize: 16,
     color: colors.textSecondary,
   },
   setupCard: {
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 24,
+    padding: 24,
   },
   setupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
     gap: 12,
   },
   setupTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
   },
-  compactTimeRow: {
+  timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 12,
+    marginBottom: 24,
+    gap: 16,
   },
-  compactTimeSection: {
+  timeSection: {
     flex: 1,
     alignItems: 'center',
   },
-  compactLabel: {
-    fontSize: 10,
+  timeLabel: {
+    fontSize: 11,
     fontWeight: '600',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: 8,
+    marginBottom: 16,
   },
-  compactPickerRow: {
+  timePickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  compactSeparator: {
-    fontSize: 24,
+  timeSeparator: {
+    fontSize: 28,
     fontWeight: 'bold',
-    color: colors.text,
+    color: colors.primary,
     marginHorizontal: 4,
   },
-  compactGoalSection: {
+  goalSection: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 28,
   },
-  compactGoalPicker: {
+  goalLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    letterSpacing: 0.5,
+    marginBottom: 16,
+  },
+  goalPicker: {
     alignItems: 'center',
   },
   pickerColumn: {
@@ -485,7 +490,7 @@ const styles = StyleSheet.create({
   },
   pickerScroll: {
     height: 120,
-    width: 60,
+    width: 70,
   },
   pickerContent: {
     paddingVertical: 40,
@@ -500,37 +505,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   pickerItemText: {
-    fontSize: 18,
+    fontSize: 20,
     color: colors.textSecondary,
   },
   pickerItemTextActive: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
   },
   setupButton: {
     backgroundColor: colors.primary,
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: 16,
+    padding: 18,
     alignItems: 'center',
   },
   setupButtonText: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
   },
   alarmsCard: {
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
   },
   alarmsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
     gap: 10,
   },
   alarmsTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: colors.text,
   },
@@ -542,23 +547,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: colors.backgroundGray,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
   },
   alarmTimeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   alarmTime: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: colors.text,
+    color: colors.primary,
   },
   alarmCheckbox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.cardGray,
     justifyContent: 'center',
     alignItems: 'center',

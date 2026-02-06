@@ -28,9 +28,9 @@ export default function SettingsScreen() {
   const [promoCode, setPromoCode] = useState('');
   const [wakeHour, setWakeHour] = useState(6);
   const [wakeMinute, setWakeMinute] = useState(0);
-  const [sleepHour, setSleepHour] = useState(22);
+  const [sleepHour, setSleepHour] = useState(23);
   const [sleepMinute, setSleepMinute] = useState(0);
-  const [cigaretteGoal, setCigaretteGoal] = useState(25);
+  const [cigaretteGoal, setCigaretteGoal] = useState(20);
   const [applyToAllDays, setApplyToAllDays] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -107,7 +107,7 @@ export default function SettingsScreen() {
           style={styles.pickerScroll}
           contentContainerStyle={styles.pickerContent}
           showsVerticalScrollIndicator={false}
-          snapToInterval={50}
+          snapToInterval={40}
           decelerationRate="fast"
         >
           {items.map((item) => (
@@ -143,12 +143,9 @@ export default function SettingsScreen() {
 
   const titleText = isGerman ? 'Einstellungen' : 'Settings';
   const morningSetupText = isGerman ? 'Morgen einrichten' : 'Setup Tomorrow';
-  const morningSetupSubtitle = isGerman ? 'Lege deine Zeiten und dein Ziel fest' : 'Set your times and your goal';
-  const sectionTitleText = isGerman ? 'DEIN ZEITPLAN' : 'YOUR SCHEDULE';
   const wakeTimeLabel = isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME';
   const sleepTimeLabel = isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME';
   const dailyGoalLabel = isGerman ? 'TAGESZIEL ZIGARETTEN' : 'DAILY CIGARETTE GOAL';
-  const goalSubtitleText = isGerman ? 'Zigaretten pro Tag' : 'Cigarettes per day';
   const scheduleAllDaysText = isGerman ? 'Zeitplan für alle Tage' : 'Schedule for all days';
   const applyAllDaysText = isGerman ? 'Änderungen auf alle Tage\nanwenden' : 'Apply changes to all days';
   const appearanceText = isGerman ? 'DARSTELLUNG' : 'APPEARANCE';
@@ -178,45 +175,40 @@ export default function SettingsScreen() {
       >
         <Text style={styles.title}>{titleText}</Text>
 
-        {/* Morgen einrichten - Same design as home page */}
         <View style={[styles.setupCard, { backgroundColor: cardColor }]}>
           <View style={styles.setupHeader}>
             <IconSymbol
               ios_icon_name="calendar"
               android_material_icon_name="calendar-today"
-              size={32}
+              size={24}
               color={colors.primary}
             />
-            <View>
-              <Text style={styles.setupTitle}>{morningSetupText}</Text>
-              <Text style={styles.setupSubtitle}>{morningSetupSubtitle}</Text>
-            </View>
+            <Text style={styles.setupTitle}>{morningSetupText}</Text>
           </View>
 
-          <Text style={styles.sectionTitle}>{sectionTitleText}</Text>
-
-          <View style={styles.timeSection}>
-            <Text style={styles.label}>{wakeTimeLabel}</Text>
-            <View style={styles.pickerRow}>
-              {renderScrollPicker(wakeHour, setWakeHour, 0, 23)}
-              <Text style={styles.pickerSeparator}>:</Text>
-              {renderScrollPicker(wakeMinute, setWakeMinute, 0, 59)}
+          <View style={styles.timeRow}>
+            <View style={styles.timeSection}>
+              <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
+              <View style={styles.timePickerRow}>
+                {renderScrollPicker(wakeHour, setWakeHour, 0, 23)}
+                <Text style={styles.timeSeparator}>:</Text>
+                {renderScrollPicker(wakeMinute, setWakeMinute, 0, 59)}
+              </View>
             </View>
-          </View>
 
-          <View style={styles.timeSection}>
-            <Text style={styles.label}>{sleepTimeLabel}</Text>
-            <View style={styles.pickerRow}>
-              {renderScrollPicker(sleepHour, setSleepHour, 0, 23)}
-              <Text style={styles.pickerSeparator}>:</Text>
-              {renderScrollPicker(sleepMinute, setSleepMinute, 0, 59)}
+            <View style={styles.timeSection}>
+              <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
+              <View style={styles.timePickerRow}>
+                {renderScrollPicker(sleepHour, setSleepHour, 0, 23)}
+                <Text style={styles.timeSeparator}>:</Text>
+                {renderScrollPicker(sleepMinute, setSleepMinute, 0, 59)}
+              </View>
             </View>
           </View>
 
           <View style={styles.goalSection}>
-            <Text style={styles.label}>{dailyGoalLabel}</Text>
-            <Text style={styles.goalSubtitle}>{goalSubtitleText}</Text>
-            <View style={styles.goalPickerContainer}>
+            <Text style={styles.goalLabel}>{dailyGoalLabel}</Text>
+            <View style={styles.goalPicker}>
               {renderScrollPicker(cigaretteGoal, setCigaretteGoal, 1, 50)}
             </View>
           </View>
@@ -437,88 +429,84 @@ const styles = StyleSheet.create({
   },
   setupHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 24,
-    gap: 16,
+    gap: 12,
   },
   setupTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
   },
-  setupSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    letterSpacing: 1,
-    marginBottom: 20,
+  timeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 16,
   },
   timeSection: {
-    marginBottom: 24,
+    flex: 1,
+    alignItems: 'center',
   },
-  label: {
-    fontSize: 12,
+  timeLabel: {
+    fontSize: 11,
     fontWeight: '600',
     color: colors.textSecondary,
-    letterSpacing: 1,
-    marginBottom: 12,
+    letterSpacing: 0.5,
+    marginBottom: Platform.OS === 'ios' ? 16 : 12,
   },
-  pickerRow: {
+  timePickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+    gap: 4,
+  },
+  timeSeparator: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginHorizontal: 4,
+  },
+  goalSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  goalLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    letterSpacing: 0.5,
+    marginBottom: Platform.OS === 'ios' ? 16 : 12,
+  },
+  goalPicker: {
+    alignItems: 'center',
   },
   pickerColumn: {
     alignItems: 'center',
   },
   pickerScroll: {
-    height: 150,
-    width: 80,
+    height: 120,
+    width: 70,
   },
   pickerContent: {
-    paddingVertical: 50,
+    paddingVertical: 40,
   },
   pickerItem: {
-    height: 50,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 10,
   },
   pickerItemActive: {
     backgroundColor: colors.primary,
   },
   pickerItemText: {
-    fontSize: 24,
+    fontSize: 20,
     color: colors.textSecondary,
   },
   pickerItemTextActive: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
-  },
-  pickerSeparator: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginHorizontal: 8,
-  },
-  goalSection: {
-    marginBottom: 16,
-  },
-  goalSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  goalPickerContainer: {
-    alignItems: 'center',
   },
   card: {
     borderRadius: 20,
