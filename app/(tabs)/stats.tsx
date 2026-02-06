@@ -41,13 +41,14 @@ export default function StatsScreen() {
   const loadStats = async () => {
     try {
       setIsLoading(true);
-      const deviceId = await getDeviceId();
+      console.log('[Stats] Loading statistics...');
       
-      // Fetch statistics from server
+      const deviceId = await getDeviceId();
       const { getStatistics } = await import('@/utils/api');
       const serverStats = await getStatistics(deviceId);
       
-      // Format the date for display (e.g., "2024-02-03" -> "03.02.")
+      console.log('[Stats] Statistics loaded:', serverStats);
+      
       const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
         const day = date.getDate().toString().padStart(2, '0');
@@ -55,14 +56,12 @@ export default function StatsScreen() {
         return `${day}.${month}.`;
       };
       
-      // Get day names in German
       const getDayName = (dateStr: string) => {
         const date = new Date(dateStr);
         const dayNames = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
         return dayNames[date.getDay()];
       };
       
-      // Transform weekly data
       const weeklyData = serverStats.weeklyData.map(item => ({
         day: getDayName(item.date),
         smoked: item.smoked,
@@ -78,17 +77,12 @@ export default function StatsScreen() {
         weeklyData,
       });
       
-      console.log('[Stats] Statistics loaded from server:', serverStats);
-      
-      // Show success toast on manual refresh
-      if (!isLoading) {
-        setToastMessage('Statistiken aktualisiert');
-        setToastType('success');
-        setToastVisible(true);
-      }
+      setToastMessage(settings?.language === 'de' ? 'Statistiken aktualisiert' : 'Statistics updated');
+      setToastType('success');
+      setToastVisible(true);
     } catch (error) {
       console.error('[Stats] Failed to load statistics:', error);
-      setToastMessage('Fehler beim Laden der Statistiken');
+      setToastMessage(settings?.language === 'de' ? 'Fehler beim Laden der Statistiken' : 'Error loading statistics');
       setToastType('error');
       setToastVisible(true);
     } finally {
@@ -98,15 +92,16 @@ export default function StatsScreen() {
 
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;
   const cardColor = settings?.backgroundColor === 'black' ? colors.cardBlack : colors.cardGray;
+  const isGerman = settings?.language === 'de';
 
-  const titleText = 'Statistik';
-  const last7DaysText = 'Letzte 7 Tage';
-  const weekOverviewText = 'Wochenübersicht';
-  const trendText = 'Dein Trend';
-  const trendValue = 'Stabil';
-  const totalSmokedLabel = 'Gesamt geraucht';
-  const avgPerDayLabel = 'Ø pro Tag';
-  const bestDayLabel = 'Bester Tag';
+  const titleText = isGerman ? 'Statistik' : 'Statistics';
+  const last7DaysText = isGerman ? 'Letzte 7 Tage' : 'Last 7 Days';
+  const weekOverviewText = isGerman ? 'Wochenübersicht' : 'Week Overview';
+  const trendText = isGerman ? 'Dein Trend' : 'Your Trend';
+  const trendValue = isGerman ? 'Stabil' : 'Stable';
+  const totalSmokedLabel = isGerman ? 'Gesamt geraucht' : 'Total Smoked';
+  const avgPerDayLabel = isGerman ? 'Ø pro Tag' : 'Avg per Day';
+  const bestDayLabel = isGerman ? 'Bester Tag' : 'Best Day';
   const totalSmokedValue = stats.totalSmoked.toString();
   const avgPerDayValue = stats.avgPerDay.toString();
   const bestDayValue = `${stats.bestDay.count}`;
@@ -116,7 +111,9 @@ export default function StatsScreen() {
     return (
       <View style={[styles.container, { backgroundColor: bgColor }]}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Laden...</Text>
+          <Text style={styles.loadingText}>
+            {isGerman ? 'Laden...' : 'Loading...'}
+          </Text>
         </View>
       </View>
     );
@@ -147,7 +144,6 @@ export default function StatsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Week Overview Chart */}
         <View style={[styles.card, { backgroundColor: cardColor }]}>
           <Text style={styles.cardTitle}>{weekOverviewText}</Text>
           <View style={styles.chartContainer}>
@@ -170,7 +166,6 @@ export default function StatsScreen() {
           </View>
         </View>
 
-        {/* Trend Card */}
         <View style={[styles.card, { backgroundColor: cardColor }]}>
           <Text style={styles.cardTitle}>{trendText}</Text>
           <View style={styles.trendContainer}>
@@ -181,7 +176,6 @@ export default function StatsScreen() {
           </View>
         </View>
 
-        {/* Stats Grid */}
         <View style={styles.statsGrid}>
           <View style={[styles.statCard, { backgroundColor: cardColor }]}>
             <Text style={styles.statLabel}>{totalSmokedLabel}</Text>
@@ -202,7 +196,6 @@ export default function StatsScreen() {
         </View>
       </ScrollView>
 
-      {/* Toast Notification */}
       <Toast
         message={toastMessage}
         type={toastType}

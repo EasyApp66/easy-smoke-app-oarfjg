@@ -1,26 +1,16 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { LegalModal } from '@/components/LegalModal';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const [showLegal, setShowLegal] = useState(false);
 
   const handleContinue = async () => {
-    console.log('User tapped continue button - navigating to home');
-    
-    // Test API connection
-    try {
-      const { BACKEND_URL } = await import('@/utils/api');
-      console.log('[Welcome] Backend URL configured:', BACKEND_URL);
-    } catch (error) {
-      console.error('[Welcome] Failed to load API module:', error);
-    }
-    
+    console.log('User tapped GO button - navigating to home');
     router.replace('/(tabs)');
   };
 
@@ -29,17 +19,14 @@ export default function WelcomeScreen() {
   const subtitle1 = 'Lege deine Wach-Zeiten fest';
   const subtitle2 = 'Wähle dein Tagesziel';
   const subtitle3 = 'Erhalte sanfte Erinnerungen';
-  const buttonText = 'Mit E-Mail anmelden';
+  const buttonText = 'GO';
   const legalLine1 = 'Durch Fortfahren akzeptieren Sie unsere';
   const legalLine2 = 'Nutzungsbedingungen (AGB),';
   const legalLine3 = 'Datenschutzerklärung und rechtlichen';
   const legalLine4 = 'Bedingungen';
 
   return (
-    <LinearGradient
-      colors={['#059669', '#10B981', '#34D399']}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{titleLine1}</Text>
@@ -83,13 +70,14 @@ export default function WelcomeScreen() {
         onClose={() => setShowLegal(false)}
         language="de"
       />
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0A0A0A',
   },
   content: {
     flex: 1,
@@ -122,15 +110,16 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   button: {
-    backgroundColor: '#1F2937',
+    backgroundColor: colors.primary,
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
   },
   buttonText: {
     color: colors.text,
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: 'bold',
+    letterSpacing: 2,
   },
   legalContainer: {
     alignItems: 'center',
@@ -138,7 +127,7 @@ const styles = StyleSheet.create({
   legalText: {
     fontSize: 12,
     color: colors.text,
-    opacity: 0.8,
+    opacity: 0.6,
     textAlign: 'center',
     textDecorationLine: 'underline',
   },

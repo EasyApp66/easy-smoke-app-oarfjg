@@ -1,75 +1,159 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
+  Animated,
 } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { IconSymbol } from '@/components/IconSymbol';
-import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 
 export default function HomeScreen() {
-  const { settings, currentLog, setupDay, isLoading } = useApp();
-  const [wakeTime, setWakeTime] = useState(new Date());
-  const [sleepTime, setSleepTime] = useState(new Date());
-  const [cigaretteGoal, setCigaretteGoal] = useState(20);
-  const [showWakePicker, setShowWakePicker] = useState(false);
-  const [showSleepPicker, setShowSleepPicker] = useState(false);
+  const { settings, currentLog, setupDay, incrementCigarettes, isLoading } = useApp();
+  const [wakeHour, setWakeHour] = useState(6);
+  const [wakeMinute, setWakeMinute] = useState(0);
+  const [sleepHour, setSleepHour] = useState(22);
+  const [sleepMinute, setSleepMinute] = useState(0);
+  const [cigaretteGoal, setCigaretteGoal] = useState(25);
   const [isSetup, setIsSetup] = useState(false);
+  const [alarms, setAlarms] = useState<string[]>([]);
+  const [selectedDay, setSelectedDay] = useState(2);
+
+  const dayAnimation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (settings) {
-      const [wakeHour, wakeMin] = settings.wakeTime.split(':').map(Number);
-      const [sleepHour, sleepMin] = settings.sleepTime.split(':').map(Number);
+      const [wh, wm] = settings.wakeTime.split(':').map(Number);
+      const [sh, sm] = settings.sleepTime.split(':').map(Number);
       
-      const wake = new Date();
-      wake.setHours(wakeHour, wakeMin, 0, 0);
-      setWakeTime(wake);
-      
-      const sleep = new Date();
-      sleep.setHours(sleepHour, sleepMin, 0, 0);
-      setSleepTime(sleep);
-      
+      setWakeHour(wh);
+      setWakeMinute(wm);
+      setSleepHour(sh);
+      setSleepMinute(sm);
       setCigaretteGoal(settings.dailyCigaretteGoal);
-      setIsSetup(true);
+      
+      if (currentLog && currentLog.cigarettesGoal > 0) {
+        setIsSetup(true);
+        calculateAlarms(settings.wakeTime, settings.sleepTime, settings.dailyCigaretteGoal);
+      }
     }
-  }, [settings]);
+  }, [settings, currentLog]);
+
+  const calculateAlarms = (wake: string, sleep: string, goal: number) => {
+    const [wh, wm] = wake.split(':').map(Number);
+    const [sh, sm] = sleep.split(':').map(Number);
+    
+    const wakeMinutes = wh * 60 + wm;
+    const sleepMinutes = sh * 60 + sm;
+    const totalMinutes = sleepMinutes - wakeMinutes;
+    const interval = totalMinutes / goal;
+    
+    const alarmList: string[] = [];
+    for (let i = 0; i < goal; i++) {
+      const alarmMinutes = wakeMinutes + (interval * i);
+      const hours = Math.floor(alarmMinutes / 60);
+      const minutes = Math.floor(alarmMinutes % 60);
+      alarmList.push(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+    }
+    
+    setAlarms(alarmList);
+  };
 
   const handleSetupDay = async () => {
     console.log('User tapped setup day button');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
-    const wakeTimeStr = `${wakeTime.getHours().toString().padStart(2, '0')}:${wakeTime.getMinutes().toString().padStart(2, '0')}`;
-    const sleepTimeStr = `${sleepTime.getHours().toString().padStart(2, '0')}:${sleepTime.getMinutes().toString().padStart(2, '0')}`;
+    const wakeTimeStr = `${wakeHour.toString().padStart(2, '0')}:${wakeMinute.toString().padStart(2, '0')}`;
+    const sleepTimeStr = `${sleepHour.toString().padStart(2, '0')}:${sleepMinute.toString().padStart(2, '0')}`;
     
     await setupDay(wakeTimeStr, sleepTimeStr, cigaretteGoal);
+    calculateAlarms(wakeTimeStr, sleepTimeStr, cigaretteGoal);
     setIsSetup(true);
     console.log('Day setup complete');
   };
 
-  const formatTime = (date: Date) => {
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+  const handleDayPress = (index: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedDay(index);
+    
+    Animated.spring(dayAnimation, {
+      toValue: index,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
   };
 
-  const wakeTimeDisplay = formatTime(wakeTime);
-  const sleepTimeDisplay = formatTime(sleepTime);
-  const cigaretteGoalDisplay = cigaretteGoal.toString();
-  const cigarettesSmoked = currentLog?.cigarettesSmoked || 0;
-  const cigarettesTotal = currentLog?.cigarettesGoal || 0;
-  const countDisplay = `${cigarettesSmoked}/${cigarettesTotal}`;
-  const readyText = 'Bereit wenn du es bist';
+  const renderScrollPicker = (
+    value: number,
+    onChange: (val: number) => void,
+    min: number,
+    max: number,
+    label: string
+  ) => {
+    const items = [];
+    for (let i = min; i <= max; i++) {
+      items.push(i);
+    }
+    
+    return (
+      <View style={styles.pickerColumn}>
+        <Text style={styles.pickerLabel}>{label}</Text>
+        <ScrollView
+          style={styles.pickerScroll}
+          contentContainerStyle={styles.pickerContent}
+          showsVerticalScrollIndicator={false}
+          snapToInterval={50}
+          decelerationRate="fast"
+        >
+          {items.map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.pickerItem,
+                value === item && styles.pickerItemActive,
+              ]}
+              onPress={() => {
+                onChange(item);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Text
+                style={[
+                  styles.pickerItemText,
+                  value === item && styles.pickerItemTextActive,
+                ]}
+              >
+                {item.toString().padStart(2, '0')}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
+  };
 
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;
   const cardColor = settings?.backgroundColor === 'black' ? colors.cardBlack : colors.cardGray;
+  const isGerman = settings?.language === 'de';
+
+  const cigarettesSmoked = currentLog?.cigarettesSmoked || 0;
+  const cigarettesTotal = currentLog?.cigarettesGoal || 0;
+  const countDisplay = `${cigarettesSmoked}/${cigarettesTotal}`;
+  const readyText = isGerman ? 'Bereit wenn du es bist' : 'Ready when you are';
+
+  const days = [
+    { number: '30', name: 'Fr' },
+    { number: '31', name: 'Sa' },
+    { number: '1', name: 'So' },
+    { number: '2', name: 'Mo' },
+    { number: '3', name: 'Di' },
+  ];
 
   if (isLoading) {
     return (
@@ -88,26 +172,34 @@ export default function HomeScreen() {
       >
         {/* Calendar Days */}
         <View style={styles.calendarContainer}>
-          <View style={styles.dayButton}>
-            <Text style={styles.dayNumber}>30</Text>
-            <Text style={styles.dayName}>Fr</Text>
-          </View>
-          <View style={styles.dayButton}>
-            <Text style={styles.dayNumber}>31</Text>
-            <Text style={styles.dayName}>Sa</Text>
-          </View>
-          <View style={[styles.dayButton, styles.dayButtonActive]}>
-            <Text style={[styles.dayNumber, styles.dayNumberActive]}>1</Text>
-            <Text style={[styles.dayName, styles.dayNameActive]}>So</Text>
-          </View>
-          <View style={styles.dayButton}>
-            <Text style={styles.dayNumber}>2</Text>
-            <Text style={styles.dayName}>Mo</Text>
-          </View>
-          <View style={[styles.dayButton, styles.dayButtonLocked]}>
-            <Text style={styles.dayNumber}>3</Text>
-            <Text style={styles.dayName}>Di</Text>
-          </View>
+          {days.map((day, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.dayButton,
+                selectedDay === index && styles.dayButtonActive,
+                index > 2 && !settings?.premiumEnabled && styles.dayButtonLocked,
+              ]}
+              onPress={() => handleDayPress(index)}
+            >
+              <Text
+                style={[
+                  styles.dayNumber,
+                  selectedDay === index && styles.dayNumberActive,
+                ]}
+              >
+                {day.number}
+              </Text>
+              <Text
+                style={[
+                  styles.dayName,
+                  selectedDay === index && styles.dayNameActive,
+                ]}
+              >
+                {day.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Cigarette Count */}
@@ -118,161 +210,104 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Setup Section */}
-        <View style={[styles.setupCard, { backgroundColor: cardColor }]}>
-          <View style={styles.setupHeader}>
-            <IconSymbol
-              ios_icon_name="calendar"
-              android_material_icon_name="calendar-today"
-              size={24}
-              color={colors.primary}
-            />
-            <Text style={styles.setupTitle}>Heute einrichten</Text>
-          </View>
-
-          {/* Wake Time */}
-          <View style={styles.timeSection}>
-            <Text style={styles.label}>AUFSTEHZEIT</Text>
-            <TouchableOpacity
-              style={styles.timeButton}
-              onPress={() => {
-                console.log('User tapped wake time picker');
-                setShowWakePicker(true);
-              }}
-            >
-              <Text style={styles.timeValue}>{wakeTimeDisplay}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Sleep Time */}
-          <View style={styles.timeSection}>
-            <Text style={styles.label}>SCHLAFENSZEIT</Text>
-            <TouchableOpacity
-              style={styles.timeButton}
-              onPress={() => {
-                console.log('User tapped sleep time picker');
-                setShowSleepPicker(true);
-              }}
-            >
-              <Text style={styles.timeValue}>{sleepTimeDisplay}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Cigarette Goal */}
-          <View style={styles.goalSection}>
-            <Text style={styles.label}>TAGESZIEL ZIGARETTEN</Text>
-            <View style={styles.goalControls}>
-              <TouchableOpacity
-                style={styles.goalButton}
-                onPress={() => {
-                  if (cigaretteGoal > 1) {
-                    console.log('User decreased cigarette goal');
-                    setCigaretteGoal(cigaretteGoal - 1);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }
-                }}
-              >
-                <Text style={styles.goalButtonText}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.goalValue}>{cigaretteGoalDisplay}</Text>
-              <TouchableOpacity
-                style={styles.goalButton}
-                onPress={() => {
-                  console.log('User increased cigarette goal');
-                  setCigaretteGoal(cigaretteGoal + 1);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
-              >
-                <Text style={styles.goalButtonText}>+</Text>
-              </TouchableOpacity>
+        {/* Setup Section or Alarms */}
+        {!isSetup ? (
+          <View style={[styles.setupCard, { backgroundColor: cardColor }]}>
+            <View style={styles.setupHeader}>
+              <IconSymbol
+                ios_icon_name="calendar"
+                android_material_icon_name="calendar-today"
+                size={24}
+                color={colors.primary}
+              />
+              <Text style={styles.setupTitle}>
+                {isGerman ? 'Heute einrichten' : 'Setup Today'}
+              </Text>
             </View>
+
+            <View style={styles.timeSection}>
+              <Text style={styles.label}>
+                {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
+              </Text>
+              <View style={styles.pickerRow}>
+                {renderScrollPicker(wakeHour, setWakeHour, 0, 23, 'Std')}
+                <Text style={styles.pickerSeparator}>:</Text>
+                {renderScrollPicker(wakeMinute, setWakeMinute, 0, 59, 'Min')}
+              </View>
+            </View>
+
+            <View style={styles.timeSection}>
+              <Text style={styles.label}>
+                {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
+              </Text>
+              <View style={styles.pickerRow}>
+                {renderScrollPicker(sleepHour, setSleepHour, 0, 23, 'Std')}
+                <Text style={styles.pickerSeparator}>:</Text>
+                {renderScrollPicker(sleepMinute, setSleepMinute, 0, 59, 'Min')}
+              </View>
+            </View>
+
+            <View style={styles.goalSection}>
+              <Text style={styles.label}>
+                {isGerman ? 'TAGESZIEL ZIGARETTEN' : 'DAILY CIGARETTE GOAL'}
+              </Text>
+              <View style={styles.goalPickerContainer}>
+                {renderScrollPicker(cigaretteGoal, setCigaretteGoal, 1, 50, 'Stk')}
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.setupButton}
+              onPress={handleSetupDay}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.setupButtonText}>
+                {isGerman ? 'Tag einrichten' : 'Setup Day'}
+              </Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Setup Button */}
-          <TouchableOpacity
-            style={styles.setupButton}
-            onPress={handleSetupDay}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.setupButtonText}>Tag einrichten</Text>
-          </TouchableOpacity>
-        </View>
+        ) : (
+          <View style={[styles.alarmsCard, { backgroundColor: cardColor }]}>
+            <View style={styles.alarmsHeader}>
+              <IconSymbol
+                ios_icon_name="alarm"
+                android_material_icon_name="alarm"
+                size={24}
+                color={colors.primary}
+              />
+              <Text style={styles.alarmsTitle}>
+                {isGerman ? 'Deine Wecker' : 'Your Alarms'}
+              </Text>
+            </View>
+            
+            <ScrollView style={styles.alarmsList} showsVerticalScrollIndicator={false}>
+              {alarms.map((alarm, index) => (
+                <View key={index} style={styles.alarmItem}>
+                  <View style={styles.alarmTimeContainer}>
+                    <Text style={styles.alarmTime}>{alarm}</Text>
+                    <View style={styles.alarmDropdown}>
+                      <IconSymbol
+                        ios_icon_name="chevron.down"
+                        android_material_icon_name="expand-more"
+                        size={16}
+                        color={colors.textSecondary}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.alarmCheckbox}>
+                    <IconSymbol
+                      ios_icon_name="checkmark"
+                      android_material_icon_name="check"
+                      size={20}
+                      color={colors.primary}
+                    />
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
       </ScrollView>
-
-      {/* Time Pickers */}
-      {showWakePicker && (
-        <Modal
-          transparent
-          animationType="fade"
-          visible={showWakePicker}
-          onRequestClose={() => setShowWakePicker(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowWakePicker(false)}
-          >
-            <BlurView intensity={80} style={styles.blurView}>
-              <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={wakeTime}
-                  mode="time"
-                  display="spinner"
-                  onChange={(event, selectedDate) => {
-                    if (selectedDate) {
-                      setWakeTime(selectedDate);
-                    }
-                  }}
-                  textColor={colors.text}
-                />
-                <TouchableOpacity
-                  style={styles.doneButton}
-                  onPress={() => setShowWakePicker(false)}
-                >
-                  <Text style={styles.doneButtonText}>Fertig</Text>
-                </TouchableOpacity>
-              </View>
-            </BlurView>
-          </TouchableOpacity>
-        </Modal>
-      )}
-
-      {showSleepPicker && (
-        <Modal
-          transparent
-          animationType="fade"
-          visible={showSleepPicker}
-          onRequestClose={() => setShowSleepPicker(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowSleepPicker(false)}
-          >
-            <BlurView intensity={80} style={styles.blurView}>
-              <View style={styles.pickerContainer}>
-                <DateTimePicker
-                  value={sleepTime}
-                  mode="time"
-                  display="spinner"
-                  onChange={(event, selectedDate) => {
-                    if (selectedDate) {
-                      setSleepTime(selectedDate);
-                    }
-                  }}
-                  textColor={colors.text}
-                />
-                <TouchableOpacity
-                  style={styles.doneButton}
-                  onPress={() => setShowSleepPicker(false)}
-                >
-                  <Text style={styles.doneButtonText}>Fertig</Text>
-                </TouchableOpacity>
-              </View>
-            </BlurView>
-          </TouchableOpacity>
-        </Modal>
-      )}
     </View>
   );
 }
@@ -305,6 +340,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     minWidth: 50,
+    backgroundColor: 'transparent',
   },
   dayButtonActive: {
     backgroundColor: colors.primary,
@@ -312,7 +348,7 @@ const styles = StyleSheet.create({
   dayButtonLocked: {
     opacity: 0.5,
     borderWidth: 2,
-    borderColor: colors.primary,
+    borderColor: colors.border,
   },
   dayNumber: {
     fontSize: 20,
@@ -371,45 +407,56 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginBottom: 12,
   },
-  timeButton: {
-    backgroundColor: colors.backgroundGray,
-    borderRadius: 12,
-    padding: 16,
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  pickerColumn: {
     alignItems: 'center',
   },
-  timeValue: {
+  pickerLabel: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  pickerScroll: {
+    height: 150,
+    width: 80,
+  },
+  pickerContent: {
+    paddingVertical: 50,
+  },
+  pickerItem: {
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pickerItemActive: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+  },
+  pickerItemText: {
+    fontSize: 24,
+    color: colors.textSecondary,
+  },
+  pickerItemTextActive: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: colors.primary,
+    color: colors.text,
+  },
+  pickerSeparator: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginHorizontal: 8,
   },
   goalSection: {
     marginBottom: 32,
   },
-  goalControls: {
-    flexDirection: 'row',
+  goalPickerContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 32,
-  },
-  goalButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.backgroundGray,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  goalButtonText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  goalValue: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: colors.primary,
-    minWidth: 80,
-    textAlign: 'center',
   },
   setupButton: {
     backgroundColor: colors.primary,
@@ -422,33 +469,52 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  blurView: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pickerContainer: {
-    backgroundColor: colors.cardGray,
+  alarmsCard: {
     borderRadius: 20,
-    padding: 20,
-    width: '80%',
+    padding: 24,
   },
-  doneButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    padding: 16,
+  alarmsHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
+    marginBottom: 20,
+    gap: 12,
   },
-  doneButtonText: {
+  alarmsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
     color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
+  },
+  alarmsList: {
+    maxHeight: 500,
+  },
+  alarmItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.backgroundGray,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+  },
+  alarmTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  alarmTime: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.text,
+  },
+  alarmDropdown: {
+    padding: 4,
+  },
+  alarmCheckbox: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.cardGray,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

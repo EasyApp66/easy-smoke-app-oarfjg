@@ -9,11 +9,11 @@ export const colors = {
   primaryLight: '#34D399',
   
   // Background colors
-  backgroundGray: '#1F1F1F', // Dark gray (default)
+  backgroundGray: '#0F0F0F', // Darker gray (default)
   backgroundBlack: '#000000', // Pure black
   
   // Card and surface colors
-  cardGray: '#2A2A2A',
+  cardGray: '#1A1A1A',
   cardBlack: '#0A0A0A',
   
   // Text colors
@@ -28,11 +28,11 @@ export const colors = {
   error: '#EF4444',
   
   // UI elements
-  border: '#374151',
-  divider: '#374151',
+  border: '#2A2A2A',
+  divider: '#2A2A2A',
   
   // Tab bar
-  tabBarBackground: '#1F1F1F',
+  tabBarBackground: '#0F0F0F',
   tabBarActive: '#10B981',
   tabBarInactive: '#6B7280',
 };

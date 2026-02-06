@@ -19,8 +19,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Toast } from '@/components/ui/Toast';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { settings, updateSettings, validatePromoCode } = useApp();
   const [showLegal, setShowLegal] = useState(false);
   const [showPromoInput, setShowPromoInput] = useState(false);
@@ -34,6 +36,7 @@ export default function SettingsScreen() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   React.useEffect(() => {
     if (settings) {
@@ -62,6 +65,9 @@ export default function SettingsScreen() {
     console.log('User changed language to:', lang);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await updateSettings({ language: lang });
+    setToastMessage(lang === 'de' ? 'Sprache auf Deutsch geändert' : 'Language changed to English');
+    setToastType('success');
+    setToastVisible(true);
   };
 
   const handlePromoCodeSubmit = async () => {
@@ -80,6 +86,13 @@ export default function SettingsScreen() {
       setToastVisible(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
+  };
+
+  const handleSignOut = () => {
+    console.log('User confirmed sign out - navigating to welcome screen');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setShowSignOutConfirm(false);
+    router.replace('/');
   };
 
   const formatTime = (date: Date) => {
@@ -112,6 +125,10 @@ export default function SettingsScreen() {
   const promoCodeText = isGerman ? 'Promo Code' : 'Promo Code';
   const enterCodeText = isGerman ? 'Code eingeben' : 'Enter code';
   const applyText = isGerman ? 'Anwenden' : 'Apply';
+  const signOutConfirmTitle = isGerman ? 'Abmelden?' : 'Sign Out?';
+  const signOutConfirmMessage = isGerman ? 'Möchten Sie sich wirklich abmelden?' : 'Are you sure you want to sign out?';
+  const cancelText = isGerman ? 'Abbrechen' : 'Cancel';
+  const confirmText = isGerman ? 'Abmelden' : 'Sign Out';
 
   const wakeTimeDisplay = formatTime(wakeTime);
   const sleepTimeDisplay = formatTime(sleepTime);
@@ -126,7 +143,6 @@ export default function SettingsScreen() {
       >
         <Text style={styles.title}>{titleText}</Text>
 
-        {/* Morning Setup */}
         <View style={[styles.card, { backgroundColor: cardColor }]}>
           <View style={styles.cardHeader}>
             <IconSymbol
@@ -186,7 +202,6 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Schedule for all days */}
         <View style={[styles.settingRow, { backgroundColor: cardColor }]}>
           <View>
             <Text style={styles.settingTitle}>{scheduleAllDaysText}</Text>
@@ -200,7 +215,6 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* Appearance */}
         <Text style={styles.sectionLabel}>{appearanceText}</Text>
         <View style={[styles.card, { backgroundColor: cardColor }]}>
           <Text style={styles.cardTitle}>{backgroundColorText}</Text>
@@ -226,7 +240,6 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Language */}
         <Text style={styles.sectionLabel}>{languageText}</Text>
         <TouchableOpacity
           style={[styles.settingRow, { backgroundColor: cardColor }]}
@@ -246,10 +259,12 @@ export default function SettingsScreen() {
           <Text style={styles.activeText}>{activeText}</Text>
         </TouchableOpacity>
 
-        {/* Sign Out */}
         <TouchableOpacity
           style={[styles.settingRow, { backgroundColor: cardColor }]}
-          onPress={() => console.log('Sign out tapped')}
+          onPress={() => {
+            console.log('Sign out tapped');
+            setShowSignOutConfirm(true);
+          }}
         >
           <Text style={styles.settingTitle}>{signOutText}</Text>
           <IconSymbol
@@ -260,7 +275,6 @@ export default function SettingsScreen() {
           />
         </TouchableOpacity>
 
-        {/* Legal */}
         <TouchableOpacity
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
@@ -277,7 +291,6 @@ export default function SettingsScreen() {
           />
         </TouchableOpacity>
 
-        {/* Promo Code */}
         <TouchableOpacity
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
@@ -295,14 +308,12 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Modals */}
       <LegalModal
         visible={showLegal}
         onClose={() => setShowLegal(false)}
         language={settings?.language || 'de'}
       />
 
-      {/* Promo Code Modal */}
       <Modal
         visible={showPromoInput}
         transparent
@@ -336,7 +347,40 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Time Pickers */}
+      <Modal
+        visible={showSignOutConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSignOutConfirm(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowSignOutConfirm(false)}
+        >
+          <BlurView intensity={80} style={styles.blurView}>
+            <View style={[styles.confirmModal, { backgroundColor: cardColor }]}>
+              <Text style={styles.confirmTitle}>{signOutConfirmTitle}</Text>
+              <Text style={styles.confirmMessage}>{signOutConfirmMessage}</Text>
+              <View style={styles.confirmButtons}>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setShowSignOutConfirm(false)}
+                >
+                  <Text style={styles.cancelButtonText}>{cancelText}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.confirmButton}
+                  onPress={handleSignOut}
+                >
+                  <Text style={styles.confirmButtonText}>{confirmText}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
+        </TouchableOpacity>
+      </Modal>
+
       {showWakePicker && (
         <Modal
           transparent
@@ -425,7 +469,6 @@ export default function SettingsScreen() {
         </Modal>
       )}
 
-      {/* Toast Notification */}
       <Toast
         message={toastMessage}
         type={toastType}
@@ -617,6 +660,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   promoButtonText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  confirmModal: {
+    borderRadius: 20,
+    padding: 24,
+    width: '80%',
+  },
+  confirmTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  confirmMessage: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginBottom: 24,
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: colors.backgroundGray,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  confirmButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: colors.error,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
     color: colors.text,
     fontSize: 16,
     fontWeight: '600',
