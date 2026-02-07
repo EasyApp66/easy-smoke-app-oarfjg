@@ -67,6 +67,7 @@ export default function SettingsScreen() {
 
   const handlePromoCodeSubmit = async () => {
     console.log('User submitted promo code:', promoCode);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const isValid = await validatePromoCode(promoCode);
     if (isValid) {
       setShowPromoInput(false);
@@ -90,7 +91,7 @@ export default function SettingsScreen() {
     router.replace('/');
   };
 
-  const renderScrollPicker = (
+  const renderTimeScrollPicker = (
     value: number,
     onChange: (val: number) => void,
     min: number,
@@ -107,8 +108,10 @@ export default function SettingsScreen() {
           style={styles.pickerScroll}
           contentContainerStyle={styles.pickerContent}
           showsVerticalScrollIndicator={false}
-          snapToInterval={32}
+          snapToInterval={40}
           decelerationRate="fast"
+          onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+          scrollEventThrottle={100}
         >
           {items.map((item) => (
             <TouchableOpacity
@@ -134,6 +137,49 @@ export default function SettingsScreen() {
           ))}
         </ScrollView>
       </View>
+    );
+  };
+
+  const renderHorizontalCigarettePicker = () => {
+    const items = [];
+    for (let i = 1; i <= 50; i++) {
+      items.push(i);
+    }
+    
+    return (
+      <ScrollView
+        horizontal
+        style={styles.horizontalPickerScroll}
+        contentContainerStyle={styles.horizontalPickerContent}
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={70}
+        decelerationRate="fast"
+        onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        scrollEventThrottle={100}
+      >
+        {items.map((item) => (
+          <TouchableOpacity
+            key={item}
+            style={[
+              styles.horizontalPickerItem,
+              cigaretteGoal === item && styles.horizontalPickerItemActive,
+            ]}
+            onPress={() => {
+              setCigaretteGoal(item);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            }}
+          >
+            <Text
+              style={[
+                styles.horizontalPickerItemText,
+                cigaretteGoal === item && styles.horizontalPickerItemTextActive,
+              ]}
+            >
+              {item}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     );
   };
 
@@ -180,7 +226,7 @@ export default function SettingsScreen() {
             <IconSymbol
               ios_icon_name="calendar"
               android_material_icon_name="calendar-today"
-              size={20}
+              size={18}
               color={colors.primary}
             />
             <Text style={styles.setupTitle}>{morningSetupText}</Text>
@@ -189,28 +235,45 @@ export default function SettingsScreen() {
           <View style={styles.timeRow}>
             <View style={styles.timeSection}>
               <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
+              <View style={styles.timeDisplay}>
+                <Text style={styles.timeValue}>
+                  {wakeHour.toString().padStart(2, '0')}
+                </Text>
+                <Text style={styles.timeColon}>:</Text>
+                <Text style={styles.timeValue}>
+                  {wakeMinute.toString().padStart(2, '0')}
+                </Text>
+              </View>
               <View style={styles.timePickerRow}>
-                {renderScrollPicker(wakeHour, setWakeHour, 0, 23)}
-                <Text style={styles.timeSeparator}>:</Text>
-                {renderScrollPicker(wakeMinute, setWakeMinute, 0, 59)}
+                {renderTimeScrollPicker(wakeHour, setWakeHour, 0, 23)}
+                {renderTimeScrollPicker(wakeMinute, setWakeMinute, 0, 59)}
               </View>
             </View>
 
             <View style={styles.timeSection}>
               <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
+              <View style={styles.timeDisplay}>
+                <Text style={styles.timeValue}>
+                  {sleepHour.toString().padStart(2, '0')}
+                </Text>
+                <Text style={styles.timeColon}>:</Text>
+                <Text style={styles.timeValue}>
+                  {sleepMinute.toString().padStart(2, '0')}
+                </Text>
+              </View>
               <View style={styles.timePickerRow}>
-                {renderScrollPicker(sleepHour, setSleepHour, 0, 23)}
-                <Text style={styles.timeSeparator}>:</Text>
-                {renderScrollPicker(sleepMinute, setSleepMinute, 0, 59)}
+                {renderTimeScrollPicker(sleepHour, setSleepHour, 0, 23)}
+                {renderTimeScrollPicker(sleepMinute, setSleepMinute, 0, 59)}
               </View>
             </View>
           </View>
 
           <View style={styles.goalSection}>
             <Text style={styles.goalLabel}>{dailyGoalLabel}</Text>
-            <View style={styles.goalPicker}>
-              {renderScrollPicker(cigaretteGoal, setCigaretteGoal, 1, 50)}
+            <View style={styles.goalDisplay}>
+              <Text style={styles.goalValue}>{cigaretteGoal}</Text>
             </View>
+            {renderHorizontalCigarettePicker()}
           </View>
         </View>
 
@@ -221,7 +284,10 @@ export default function SettingsScreen() {
           </View>
           <Switch
             value={applyToAllDays}
-            onValueChange={setApplyToAllDays}
+            onValueChange={(value) => {
+              setApplyToAllDays(value);
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            }}
             trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor={colors.text}
           />
@@ -275,6 +341,7 @@ export default function SettingsScreen() {
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
             console.log('Promo code tapped');
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setShowPromoInput(true);
           }}
         >
@@ -291,6 +358,7 @@ export default function SettingsScreen() {
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
             console.log('Legal tapped');
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setShowLegal(true);
           }}
         >
@@ -307,6 +375,7 @@ export default function SettingsScreen() {
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
             console.log('Sign out tapped');
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setShowSignOutConfirm(true);
           }}
         >
@@ -377,7 +446,10 @@ export default function SettingsScreen() {
               <View style={styles.confirmButtons}>
                 <TouchableOpacity
                   style={styles.cancelButton}
-                  onPress={() => setShowSignOutConfirm(false)}
+                  onPress={() => {
+                    setShowSignOutConfirm(false);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
                 >
                   <Text style={styles.cancelButtonText}>{cancelText}</Text>
                 </TouchableOpacity>
@@ -423,25 +495,25 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   setupCard: {
-    borderRadius: 20,
-    padding: 18,
+    borderRadius: 16,
+    padding: 16,
     marginBottom: 16,
   },
   setupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 18,
-    gap: 10,
+    marginBottom: 16,
+    gap: 8,
   },
   setupTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.text,
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 18,
+    marginBottom: 16,
     gap: 12,
   },
   timeSection: {
@@ -449,78 +521,122 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeLabel: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: 9,
+    fontWeight: '700',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  timeDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  timeValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  timeColon: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginHorizontal: 4,
   },
   timePickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
-  },
-  timeSeparator: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginHorizontal: 2,
+    gap: 8,
   },
   goalSection: {
     alignItems: 'center',
     marginBottom: 12,
   },
   goalLabel: {
-    fontSize: 10,
-    fontWeight: '600',
+    fontSize: 9,
+    fontWeight: '700',
     color: colors.textSecondary,
     letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  goalDisplay: {
     marginBottom: 12,
   },
-  goalPicker: {
-    alignItems: 'center',
+  goalValue: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: colors.primary,
   },
   pickerColumn: {
     alignItems: 'center',
   },
   pickerScroll: {
-    height: 96,
-    width: 60,
+    height: 80,
+    width: 50,
   },
   pickerContent: {
-    paddingVertical: 32,
+    paddingVertical: 20,
   },
   pickerItem: {
-    height: 32,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
   },
   pickerItemActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: 'transparent',
   },
   pickerItemText: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
   },
   pickerItemTextActive: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text,
+    color: colors.primary,
+  },
+  horizontalPickerScroll: {
+    height: 60,
+  },
+  horizontalPickerContent: {
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  horizontalPickerItem: {
+    width: 60,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    borderRadius: 12,
+    backgroundColor: 'transparent',
+  },
+  horizontalPickerItemActive: {
+    backgroundColor: 'transparent',
+  },
+  horizontalPickerItemText: {
+    fontSize: 18,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  horizontalPickerItemTextActive: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.primary,
   },
   card: {
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 16,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
   },
   sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: colors.textSecondary,
     letterSpacing: 1,
     marginTop: 16,
@@ -531,8 +647,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 16,
+    padding: 18,
     marginBottom: 12,
   },
   settingTitle: {
@@ -562,7 +678,7 @@ const styles = StyleSheet.create({
   },
   colorButton: {
     flex: 1,
-    padding: 16,
+    padding: 14,
     borderRadius: 12,
     backgroundColor: colors.backgroundGray,
     alignItems: 'center',
@@ -573,7 +689,7 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   colorButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: colors.text,
   },
@@ -614,9 +730,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   promoButtonText: {
-    color: colors.text,
+    color: '#000000',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   confirmModal: {
     borderRadius: 20,
