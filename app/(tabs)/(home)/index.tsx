@@ -235,7 +235,7 @@ export default function HomeScreen() {
     });
   };
 
-  const renderCompactTimePicker = (
+  const renderVerticalTimePicker = (
     hourValue: number,
     minuteValue: number,
     onHourChange: (val: number) => void,
@@ -244,12 +244,11 @@ export default function HomeScreen() {
     const hours = Array.from({ length: 24 }, (_, i) => i);
     const minutes = [0, 15, 30, 45];
     
-    const ITEM_WIDTH = 80;
-    const ITEM_HEIGHT = 60;
+    const ITEM_HEIGHT = 50;
 
     const handleHourScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      const index = Math.round(offsetX / ITEM_WIDTH);
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
       if (index >= 0 && index < hours.length && hours[index] !== hourValue) {
         onHourChange(hours[index]);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -257,8 +256,8 @@ export default function HomeScreen() {
     };
 
     const handleMinuteScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      const index = Math.round(offsetX / ITEM_WIDTH);
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
       if (index >= 0 && index < minutes.length && minutes[index] !== minuteValue) {
         onMinuteChange(minutes[index]);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -266,61 +265,63 @@ export default function HomeScreen() {
     };
 
     return (
-      <View style={styles.compactTimePickerContainer}>
-        <View style={styles.compactTimeDisplay}>
-          <Text style={styles.compactTimeText}>
+      <View style={styles.verticalTimePickerContainer}>
+        <View style={styles.verticalTimeDisplay}>
+          <Text style={styles.verticalTimeText}>
             {hourValue.toString().padStart(2, '0')}
           </Text>
-          <Text style={styles.compactTimeSeparator}>:</Text>
-          <Text style={styles.compactTimeText}>
+          <Text style={styles.verticalTimeSeparator}>:</Text>
+          <Text style={styles.verticalTimeText}>
             {minuteValue.toString().padStart(2, '0')}
           </Text>
         </View>
         
-        <View style={styles.hiddenPickersContainer}>
-          <FlatList
-            horizontal
-            data={hours}
-            keyExtractor={(item) => `hour-${item}`}
-            renderItem={({ item }) => (
-              <View style={[styles.hiddenPickerItem, { width: ITEM_WIDTH, height: ITEM_HEIGHT }]}>
-                <Text style={styles.hiddenPickerText}>{item.toString().padStart(2, '0')}</Text>
-              </View>
-            )}
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={ITEM_WIDTH}
-            decelerationRate="fast"
-            onMomentumScrollEnd={handleHourScroll}
-            getItemLayout={(data, index) => ({
-              length: ITEM_WIDTH,
-              offset: ITEM_WIDTH * index,
-              index,
-            })}
-            initialScrollIndex={hourValue}
-            contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
-          />
+        <View style={styles.hiddenVerticalPickersContainer}>
+          <View style={styles.hiddenVerticalPickerColumn}>
+            <FlatList
+              data={hours}
+              keyExtractor={(item) => `hour-${item}`}
+              renderItem={({ item }) => (
+                <View style={[styles.hiddenVerticalPickerItem, { height: ITEM_HEIGHT }]}>
+                  <Text style={styles.hiddenVerticalPickerText}>{item.toString().padStart(2, '0')}</Text>
+                </View>
+              )}
+              showsVerticalScrollIndicator={false}
+              snapToInterval={ITEM_HEIGHT}
+              decelerationRate="fast"
+              onMomentumScrollEnd={handleHourScroll}
+              getItemLayout={(data, index) => ({
+                length: ITEM_HEIGHT,
+                offset: ITEM_HEIGHT * index,
+                index,
+              })}
+              initialScrollIndex={hourValue}
+              contentContainerStyle={{ paddingVertical: (150 - ITEM_HEIGHT) / 2 }}
+            />
+          </View>
           
-          <FlatList
-            horizontal
-            data={minutes}
-            keyExtractor={(item) => `minute-${item}`}
-            renderItem={({ item }) => (
-              <View style={[styles.hiddenPickerItem, { width: ITEM_WIDTH, height: ITEM_HEIGHT }]}>
-                <Text style={styles.hiddenPickerText}>{item.toString().padStart(2, '0')}</Text>
-              </View>
-            )}
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={ITEM_WIDTH}
-            decelerationRate="fast"
-            onMomentumScrollEnd={handleMinuteScroll}
-            getItemLayout={(data, index) => ({
-              length: ITEM_WIDTH,
-              offset: ITEM_WIDTH * index,
-              index,
-            })}
-            initialScrollIndex={minutes.indexOf(minuteValue)}
-            contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
-          />
+          <View style={styles.hiddenVerticalPickerColumn}>
+            <FlatList
+              data={minutes}
+              keyExtractor={(item) => `minute-${item}`}
+              renderItem={({ item }) => (
+                <View style={[styles.hiddenVerticalPickerItem, { height: ITEM_HEIGHT }]}>
+                  <Text style={styles.hiddenVerticalPickerText}>{item.toString().padStart(2, '0')}</Text>
+                </View>
+              )}
+              showsVerticalScrollIndicator={false}
+              snapToInterval={ITEM_HEIGHT}
+              decelerationRate="fast"
+              onMomentumScrollEnd={handleMinuteScroll}
+              getItemLayout={(data, index) => ({
+                length: ITEM_HEIGHT,
+                offset: ITEM_HEIGHT * index,
+                index,
+              })}
+              initialScrollIndex={minutes.indexOf(minuteValue)}
+              contentContainerStyle={{ paddingVertical: (150 - ITEM_HEIGHT) / 2 }}
+            />
+          </View>
         </View>
       </View>
     );
@@ -497,16 +498,16 @@ export default function HomeScreen() {
             <View style={styles.timePickersRow}>
               <View style={styles.timePickerColumn}>
                 <Text style={styles.timeLabel}>
-                  {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
+                  {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
                 </Text>
-                {renderCompactTimePicker(sleepHour, sleepMinute, setSleepHour, setSleepMinute)}
+                {renderVerticalTimePicker(wakeHour, wakeMinute, setWakeHour, setWakeMinute)}
               </View>
 
               <View style={styles.timePickerColumn}>
                 <Text style={styles.timeLabel}>
-                  {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
+                  {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
                 </Text>
-                {renderCompactTimePicker(wakeHour, wakeMinute, setWakeHour, setWakeMinute)}
+                {renderVerticalTimePicker(sleepHour, sleepMinute, setSleepHour, setSleepMinute)}
               </View>
             </View>
 
@@ -722,12 +723,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 12,
   },
-  compactTimePickerContainer: {
+  verticalTimePickerContainer: {
     alignItems: 'center',
-    height: 80,
+    height: 150,
     overflow: 'hidden',
+    width: '100%',
   },
-  compactTimeDisplay: {
+  verticalTimeDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primary,
@@ -736,30 +738,37 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     zIndex: 10,
   },
-  compactTimeText: {
+  verticalTimeText: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#000000',
   },
-  compactTimeSeparator: {
+  verticalTimeSeparator: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#000000',
     marginHorizontal: 4,
   },
-  hiddenPickersContainer: {
+  hiddenVerticalPickersContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
+    bottom: 0,
     opacity: 0,
-    height: 80,
-  },
-  hiddenPickerItem: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  hiddenPickerText: {
+  hiddenVerticalPickerColumn: {
+    height: 150,
+    width: 60,
+  },
+  hiddenVerticalPickerItem: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hiddenVerticalPickerText: {
     fontSize: 24,
     color: colors.text,
   },
