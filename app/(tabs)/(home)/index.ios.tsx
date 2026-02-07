@@ -88,11 +88,19 @@ function VerticalTimePicker({
             contentContainerStyle={{ paddingVertical: ITEM_HEIGHT }}
             scrollEventThrottle={16}
           >
-            {hours.map((item) => (
-              <View key={`hour-${item}`} style={[styles.verticalPickerItem, { height: ITEM_HEIGHT }]}>
-                <Text style={styles.verticalPickerText}>{item.toString().padStart(2, '0')}</Text>
-              </View>
-            ))}
+            {hours.map((item) => {
+              const isSelected = item === hourValue;
+              return (
+                <View key={`hour-${item}`} style={[styles.verticalPickerItem, { height: ITEM_HEIGHT }]}>
+                  <Text style={[
+                    styles.verticalPickerText,
+                    isSelected && styles.verticalPickerTextSelected
+                  ]}>
+                    {item.toString().padStart(2, '0')}
+                  </Text>
+                </View>
+              );
+            })}
           </ScrollView>
         </View>
         
@@ -108,11 +116,19 @@ function VerticalTimePicker({
             contentContainerStyle={{ paddingVertical: ITEM_HEIGHT }}
             scrollEventThrottle={16}
           >
-            {minutes.map((item) => (
-              <View key={`minute-${item}`} style={[styles.verticalPickerItem, { height: ITEM_HEIGHT }]}>
-                <Text style={styles.verticalPickerText}>{item.toString().padStart(2, '0')}</Text>
-              </View>
-            ))}
+            {minutes.map((item) => {
+              const isSelected = item === minuteValue;
+              return (
+                <View key={`minute-${item}`} style={[styles.verticalPickerItem, { height: ITEM_HEIGHT }]}>
+                  <Text style={[
+                    styles.verticalPickerText,
+                    isSelected && styles.verticalPickerTextSelected
+                  ]}>
+                    {item.toString().padStart(2, '0')}
+                  </Text>
+                </View>
+              );
+            })}
           </ScrollView>
         </View>
       </View>
@@ -168,11 +184,19 @@ function HorizontalCigarettePicker({
         contentContainerStyle={{ paddingHorizontal: ITEM_WIDTH }}
         scrollEventThrottle={16}
       >
-        {items.map((item) => (
-          <View key={`cig-${item}`} style={[styles.cigarettePickerItem, { width: ITEM_WIDTH }]}>
-            <Text style={styles.cigarettePickerText}>{item}</Text>
-          </View>
-        ))}
+        {items.map((item) => {
+          const isSelected = item === value;
+          return (
+            <View key={`cig-${item}`} style={[styles.cigarettePickerItem, { width: ITEM_WIDTH }]}>
+              <Text style={[
+                styles.cigarettePickerText,
+                isSelected && styles.cigarettePickerTextSelected
+              ]}>
+                {item}
+              </Text>
+            </View>
+          );
+        })}
       </ScrollView>
       
       <View style={styles.horizontalGreenLens} pointerEvents="none" />
@@ -731,7 +755,7 @@ const styles = StyleSheet.create({
   verticalTimeSeparator: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#888888',
     marginHorizontal: 8,
   },
   verticalPickerItem: {
@@ -741,7 +765,10 @@ const styles = StyleSheet.create({
   verticalPickerText: {
     fontSize: 24,
     fontWeight: '600',
-    color: colors.text,
+    color: '#888888',
+  },
+  verticalPickerTextSelected: {
+    color: '#FFFFFF',
   },
   verticalGreenLens: {
     position: 'absolute',
@@ -751,7 +778,7 @@ const styles = StyleSheet.create({
     height: 50,
     backgroundColor: colors.primary,
     borderRadius: 16,
-    opacity: 0.9,
+    opacity: 0.25,
   },
   goalSection: {
     alignItems: 'center',
@@ -778,7 +805,10 @@ const styles = StyleSheet.create({
   cigarettePickerText: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: colors.text,
+    color: '#888888',
+  },
+  cigarettePickerTextSelected: {
+    color: '#FFFFFF',
   },
   horizontalGreenLens: {
     position: 'absolute',
@@ -789,7 +819,7 @@ const styles = StyleSheet.create({
     width: 100,
     backgroundColor: colors.primary,
     borderRadius: 16,
-    opacity: 0.9,
+    opacity: 0.25,
   },
   setupButton: {
     backgroundColor: colors.primary,
