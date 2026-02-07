@@ -7,7 +7,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
-  FlatList,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
@@ -250,49 +249,37 @@ export default function HomeScreen() {
         
         <View style={styles.hiddenVerticalPickersContainer}>
           <View style={styles.hiddenVerticalPickerColumn}>
-            <FlatList
-              data={hours}
-              keyExtractor={(item) => `hour-${item}`}
-              renderItem={({ item }) => (
-                <View style={[styles.hiddenVerticalPickerItem, { height: ITEM_HEIGHT }]}>
-                  <Text style={styles.hiddenVerticalPickerText}>{item.toString().padStart(2, '0')}</Text>
-                </View>
-              )}
+            <ScrollView
               showsVerticalScrollIndicator={false}
               snapToInterval={ITEM_HEIGHT}
               decelerationRate="fast"
               onMomentumScrollEnd={handleHourScroll}
-              getItemLayout={(data, index) => ({
-                length: ITEM_HEIGHT,
-                offset: ITEM_HEIGHT * index,
-                index,
-              })}
-              initialScrollIndex={hourValue}
               contentContainerStyle={{ paddingVertical: (150 - ITEM_HEIGHT) / 2 }}
-            />
+              scrollEventThrottle={16}
+            >
+              {hours.map((item) => (
+                <View key={`hour-${item}`} style={[styles.hiddenVerticalPickerItem, { height: ITEM_HEIGHT }]}>
+                  <Text style={styles.hiddenVerticalPickerText}>{item.toString().padStart(2, '0')}</Text>
+                </View>
+              ))}
+            </ScrollView>
           </View>
           
           <View style={styles.hiddenVerticalPickerColumn}>
-            <FlatList
-              data={minutes}
-              keyExtractor={(item) => `minute-${item}`}
-              renderItem={({ item }) => (
-                <View style={[styles.hiddenVerticalPickerItem, { height: ITEM_HEIGHT }]}>
-                  <Text style={styles.hiddenVerticalPickerText}>{item.toString().padStart(2, '0')}</Text>
-                </View>
-              )}
+            <ScrollView
               showsVerticalScrollIndicator={false}
               snapToInterval={ITEM_HEIGHT}
               decelerationRate="fast"
               onMomentumScrollEnd={handleMinuteScroll}
-              getItemLayout={(data, index) => ({
-                length: ITEM_HEIGHT,
-                offset: ITEM_HEIGHT * index,
-                index,
-              })}
-              initialScrollIndex={minutes.indexOf(minuteValue)}
               contentContainerStyle={{ paddingVertical: (150 - ITEM_HEIGHT) / 2 }}
-            />
+              scrollEventThrottle={16}
+            >
+              {minutes.map((item) => (
+                <View key={`minute-${item}`} style={[styles.hiddenVerticalPickerItem, { height: ITEM_HEIGHT }]}>
+                  <Text style={styles.hiddenVerticalPickerText}>{item.toString().padStart(2, '0')}</Text>
+                </View>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </View>
@@ -302,7 +289,6 @@ export default function HomeScreen() {
   const renderCompactCigarettePicker = () => {
     const items = Array.from({ length: 50 }, (_, i) => i + 1);
     const ITEM_WIDTH = 100;
-    const ITEM_HEIGHT = 80;
 
     const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const offsetX = event.nativeEvent.contentOffset.x;
@@ -313,54 +299,49 @@ export default function HomeScreen() {
       }
     };
 
-    const renderItem = ({ item, index }: { item: number; index: number }) => {
-      const currentIndex = cigaretteGoal - 1;
-      const distance = Math.abs(index - currentIndex);
-      
-      const isSelected = distance === 0;
-      const isAdjacent = distance === 1;
-      const isVisible = distance <= 1;
-
-      if (!isVisible) {
-        return <View style={[styles.cigarettePickerItem, { width: ITEM_WIDTH, opacity: 0 }]} />;
-      }
-
-      return (
-        <View style={[
-          styles.cigarettePickerItem,
-          { width: ITEM_WIDTH },
-          isSelected && styles.cigarettePickerItemSelected,
-        ]}>
-          <Text style={[
-            styles.cigarettePickerText,
-            isSelected && styles.cigarettePickerTextSelected,
-            isAdjacent && styles.cigarettePickerTextAdjacent,
-          ]}>
-            {item}
-          </Text>
-        </View>
-      );
-    };
-
     return (
       <View style={styles.compactCigarettePickerContainer}>
-        <FlatList
+        <ScrollView
           horizontal
-          data={items}
-          keyExtractor={(item) => `cig-${item}`}
-          renderItem={renderItem}
           showsHorizontalScrollIndicator={false}
           snapToInterval={ITEM_WIDTH}
           decelerationRate="fast"
           onMomentumScrollEnd={handleScroll}
-          getItemLayout={(data, index) => ({
-            length: ITEM_WIDTH,
-            offset: ITEM_WIDTH * index,
-            index,
-          })}
-          initialScrollIndex={cigaretteGoal - 1}
           contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
-        />
+          scrollEventThrottle={16}
+        >
+          {items.map((item, index) => {
+            const currentIndex = cigaretteGoal - 1;
+            const distance = Math.abs(index - currentIndex);
+            
+            const isSelected = distance === 0;
+            const isAdjacent = distance === 1;
+            const isVisible = distance <= 1;
+
+            if (!isVisible) {
+              return <View key={`cig-${item}`} style={[styles.cigarettePickerItem, { width: ITEM_WIDTH, opacity: 0 }]} />;
+            }
+
+            return (
+              <View
+                key={`cig-${item}`}
+                style={[
+                  styles.cigarettePickerItem,
+                  { width: ITEM_WIDTH },
+                  isSelected && styles.cigarettePickerItemSelected,
+                ]}
+              >
+                <Text style={[
+                  styles.cigarettePickerText,
+                  isSelected && styles.cigarettePickerTextSelected,
+                  isAdjacent && styles.cigarettePickerTextAdjacent,
+                ]}>
+                  {item}
+                </Text>
+              </View>
+            );
+          })}
+        </ScrollView>
       </View>
     );
   };
@@ -401,6 +382,7 @@ export default function HomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
       >
         <View style={styles.calendarContainer}>
           {days.map((day, index) => (
@@ -522,7 +504,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
             
-            <ScrollView style={styles.alarmsList} showsVerticalScrollIndicator={false}>
+            <ScrollView style={styles.alarmsList} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
               {alarms.map((alarm, index) => {
                 const isChecked = checkedAlarms.has(index);
                 const isNextAlarm = index === nextAlarmIndex;
