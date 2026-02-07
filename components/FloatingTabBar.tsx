@@ -111,28 +111,23 @@ export default function FloatingTabBar({
   const dynamicStyles = {
     blurContainer: {
       ...styles.blurContainer,
-      backgroundColor: 'transparent',
+      backgroundColor: 'rgba(42, 42, 42, 0.3)',
       ...Platform.select({
         ios: {
-          backgroundColor: 'transparent',
+          backgroundColor: 'rgba(42, 42, 42, 0.3)',
         },
         android: {
-          backgroundColor: 'transparent',
+          backgroundColor: 'rgba(42, 42, 42, 0.3)',
         },
         web: {
-          backgroundColor: 'transparent',
-          backdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(42, 42, 42, 0.3)',
+          backdropFilter: 'blur(20px)',
         },
       }),
     },
-    background: {
-      ...styles.background,
-    },
     indicator: {
       ...styles.indicator,
-      backgroundColor: theme.dark
-        ? 'rgba(255, 255, 255, 0.08)'
-        : 'rgba(0, 0, 0, 0.04)',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
       width: `${tabWidthPercent}%` as `${number}%`,
     },
   };
@@ -147,10 +142,9 @@ export default function FloatingTabBar({
         }
       ]}>
         <BlurView
-          intensity={80}
+          intensity={40}
           style={[dynamicStyles.blurContainer, { borderRadius }]}
         >
-          <View style={dynamicStyles.background} />
           <Animated.View style={[dynamicStyles.indicator, indicatorStyle]} />
           <View style={styles.tabsContainer}>
             {tabs.map((tab, index) => {
@@ -168,7 +162,7 @@ export default function FloatingTabBar({
                       android_material_icon_name={tab.icon}
                       ios_icon_name={tab.icon}
                       size={26}
-                      color={isActive ? theme.colors.primary : (theme.dark ? '#98989D' : '#000000')}
+                      color={isActive ? theme.colors.primary : 'rgba(255, 255, 255, 0.6)'}
                     />
                   </View>
                 </TouchableOpacity>
@@ -199,9 +193,6 @@ const styles = StyleSheet.create({
   },
   blurContainer: {
     overflow: 'hidden',
-  },
-  background: {
-    ...StyleSheet.absoluteFillObject,
   },
   indicator: {
     position: 'absolute',

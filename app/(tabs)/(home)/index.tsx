@@ -10,6 +10,7 @@ import {
   Animated,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Modal,
 } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
@@ -140,7 +141,7 @@ function VerticalTimePicker({
   );
 }
 
-// Horizontal Cigarette Picker Component
+// Horizontal Cigarette Picker Component - Only 3 items visible
 function HorizontalCigarettePicker({
   value,
   onValueChange,
@@ -149,7 +150,7 @@ function HorizontalCigarettePicker({
   onValueChange: (val: number) => void;
 }) {
   const items = Array.from({ length: 50 }, (_, i) => i + 1);
-  const ITEM_WIDTH = 100;
+  const ITEM_WIDTH = 80;
 
   const cigaretteScrollRef = useRef<ScrollView>(null);
 
@@ -206,6 +207,68 @@ function HorizontalCigarettePicker({
   );
 }
 
+// Snooze Modal Component
+function SnoozeModal({
+  visible,
+  onClose,
+  onSnooze,
+  language,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSnooze: (minutes: number) => void;
+  language: 'de' | 'en';
+}) {
+  const isGerman = language === 'de';
+  const snoozeOptions = [
+    { minutes: 15, label: isGerman ? '15 Minuten' : '15 Minutes' },
+    { minutes: 30, label: isGerman ? '30 Minuten' : '30 Minutes' },
+    { minutes: 60, label: isGerman ? '1 Stunde' : '1 Hour' },
+    { minutes: 120, label: isGerman ? '2 Stunden' : '2 Hours' },
+  ];
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <View style={styles.snoozeModalContent}>
+          <Text style={styles.snoozeModalTitle}>
+            {isGerman ? 'Wecker ausblenden für:' : 'Hide alarm for:'}
+          </Text>
+          {snoozeOptions.map((option) => (
+            <TouchableOpacity
+              key={option.minutes}
+              style={styles.snoozeOption}
+              onPress={() => {
+                onSnooze(option.minutes);
+                onClose();
+              }}
+            >
+              <Text style={styles.snoozeOptionText}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            style={styles.snoozeCancelButton}
+            onPress={onClose}
+          >
+            <Text style={styles.snoozeCancelText}>
+              {isGerman ? 'Abbrechen' : 'Cancel'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
+
 export default function HomeScreen() {
   const { settings, currentLog, setupDay, incrementCigarettes, isLoading, getLogForSpecificDate, saveLogForDate } = useApp();
   const [wakeHour, setWakeHour] = useState(6);
@@ -216,11 +279,14 @@ export default function HomeScreen() {
   const [isSetup, setIsSetup] = useState(false);
   const [alarms, setAlarms] = useState<string[]>([]);
   const [checkedAlarms, setCheckedAlarms] = useState<Set<number>>(new Set());
+  const [snoozedAlarms, setSnoozedAlarms] = useState<Map<number, number>>(new Map());
   const [selectedDay, setSelectedDay] = useState(2);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
   const [showSetupModal, setShowSetupModal] = useState(false);
+  const [showSnoozeModal, setShowSnoozeModal] = useState(false);
+  const [selectedAlarmIndex, setSelectedAlarmIndex] = useState<number | null>(null);
 
   const dayAnimation = useRef(new Animated.Value(0)).current;
 
@@ -287,12 +353,34 @@ export default function HomeScreen() {
       setIsSetup(false);
       setAlarms([]);
       setCheckedAlarms(new Set());
+      setSnoozedAlarms(new Map());
     }
   };
 
   useEffect(() => {
     loadDataForSelectedDay();
   }, [selectedDay, settings, currentLog]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = Date.now();
+      setSnoozedAlarms(prev => {
+        const newMap = new Map(prev);
+        let hasChanges = false;
+        
+        newMap.forEach((snoozeUntil, alarmIndex) => {
+          if (now >= snoozeUntil) {
+            newMap.delete(alarmIndex);
+            hasChanges = true;
+          }
+        });
+        
+        return hasChanges ? newMap : prev;
+      });
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const calculateAlarms = (wake: string, sleep: string, goal: number) => {
     const [wh, wm] = wake.split(':').map(Number);
@@ -347,7 +435,7 @@ export default function HomeScreen() {
       const [alarmHour, alarmMinute] = alarms[i].split(':').map(Number);
       const alarmMinutes = alarmHour * 60 + alarmMinute;
       
-      if (alarmMinutes > currentMinutes && !checkedAlarms.has(i)) {
+      if (alarmMinutes > currentMinutes && !checkedAlarms.has(i) && !snoozedAlarms.has(i)) {
         return i;
       }
     }
@@ -417,15 +505,58 @@ export default function HomeScreen() {
     console.log('User tapped alarm:', index);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
+    const isChecked = checkedAlarms.has(index);
+    
+    if (isChecked) {
+      setCheckedAlarms(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    } else {
+      setSelectedAlarmIndex(index);
+      setShowSnoozeModal(true);
+    }
+  };
+
+  const handleSnooze = (minutes: number) => {
+    if (selectedAlarmIndex === null) return;
+    
+    console.log('Snoozing alarm', selectedAlarmIndex, 'for', minutes, 'minutes');
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    const snoozeUntil = Date.now() + (minutes * 60 * 1000);
+    setSnoozedAlarms(prev => {
+      const newMap = new Map(prev);
+      newMap.set(selectedAlarmIndex, snoozeUntil);
+      return newMap;
+    });
+    
     setCheckedAlarms(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
+      newSet.add(selectedAlarmIndex);
       return newSet;
     });
+    
+    const isGerman = settings?.language === 'de';
+    const hoursText = Math.floor(minutes / 60);
+    const minutesText = minutes % 60;
+    
+    let timeText = '';
+    if (hoursText > 0) {
+      timeText = isGerman ? `${hoursText} Std` : `${hoursText} hrs`;
+      if (minutesText > 0) {
+        timeText += isGerman ? ` ${minutesText} Min` : ` ${minutesText} min`;
+      }
+    } else {
+      timeText = isGerman ? `${minutesText} Min` : `${minutesText} min`;
+    }
+    
+    setToastMessage(isGerman ? `Wecker ausgeblendet für ${timeText}` : `Alarm hidden for ${timeText}`);
+    setToastType('info');
+    setToastVisible(true);
+    
+    setSelectedAlarmIndex(null);
   };
 
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;
@@ -602,8 +733,13 @@ export default function HomeScreen() {
             <ScrollView style={styles.alarmsList} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
               {alarms.map((alarm, index) => {
                 const isChecked = checkedAlarms.has(index);
+                const isSnoozed = snoozedAlarms.has(index);
                 const isNextAlarm = index === nextAlarmIndex;
                 const timeUntil = calculateTimeUntilAlarm(alarm);
+
+                if (isSnoozed) {
+                  return null;
+                }
 
                 return (
                   <TouchableOpacity
@@ -649,6 +785,16 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      <SnoozeModal
+        visible={showSnoozeModal}
+        onClose={() => {
+          setShowSnoozeModal(false);
+          setSelectedAlarmIndex(null);
+        }}
+        onSnooze={handleSnooze}
+        language={settings?.language || 'de'}
+      />
 
       <Toast
         message={toastMessage}
@@ -829,7 +975,7 @@ const styles = StyleSheet.create({
   },
   compactCigarettePickerContainer: {
     height: 80,
-    width: '100%',
+    width: 240,
     position: 'relative',
     overflow: 'hidden',
     alignItems: 'center',
@@ -854,8 +1000,8 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: '50%',
-    transform: [{ translateX: -50 }],
-    width: 100,
+    transform: [{ translateX: -40 }],
+    width: 80,
     backgroundColor: colors.primary,
     borderRadius: 16,
     opacity: 0.25,
@@ -954,5 +1100,51 @@ const styles = StyleSheet.create({
   alarmCheckboxChecked: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  snoozeModalContent: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 20,
+    padding: 24,
+    width: '80%',
+    maxWidth: 320,
+  },
+  snoozeModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  snoozeOption: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+  },
+  snoozeOptionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  snoozeCancelButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.textSecondary,
+  },
+  snoozeCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
 });
