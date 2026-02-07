@@ -108,33 +108,36 @@ export default function SettingsScreen() {
           style={styles.pickerScroll}
           contentContainerStyle={styles.pickerContent}
           showsVerticalScrollIndicator={false}
-          snapToInterval={40}
+          snapToInterval={50}
           decelerationRate="fast"
           onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
           scrollEventThrottle={100}
         >
-          {items.map((item) => (
-            <TouchableOpacity
-              key={item}
-              style={[
-                styles.pickerItem,
-                value === item && styles.pickerItemActive,
-              ]}
-              onPress={() => {
-                onChange(item);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              }}
-            >
-              <Text
+          {items.map((item) => {
+            const isSelected = value === item;
+            return (
+              <TouchableOpacity
+                key={item}
                 style={[
-                  styles.pickerItemText,
-                  value === item && styles.pickerItemTextActive,
+                  styles.pickerItem,
+                  isSelected && styles.pickerItemActive,
                 ]}
+                onPress={() => {
+                  onChange(item);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                }}
               >
-                {item.toString().padStart(2, '0')}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.pickerItemText,
+                    isSelected && styles.pickerItemTextActive,
+                  ]}
+                >
+                  {item.toString().padStart(2, '0')}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
     );
@@ -152,33 +155,36 @@ export default function SettingsScreen() {
         style={styles.horizontalPickerScroll}
         contentContainerStyle={styles.horizontalPickerContent}
         showsHorizontalScrollIndicator={false}
-        snapToInterval={70}
+        snapToInterval={80}
         decelerationRate="fast"
         onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
         scrollEventThrottle={100}
       >
-        {items.map((item) => (
-          <TouchableOpacity
-            key={item}
-            style={[
-              styles.horizontalPickerItem,
-              cigaretteGoal === item && styles.horizontalPickerItemActive,
-            ]}
-            onPress={() => {
-              setCigaretteGoal(item);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            }}
-          >
-            <Text
+        {items.map((item) => {
+          const isSelected = cigaretteGoal === item;
+          return (
+            <TouchableOpacity
+              key={item}
               style={[
-                styles.horizontalPickerItemText,
-                cigaretteGoal === item && styles.horizontalPickerItemTextActive,
+                styles.horizontalPickerItem,
+                isSelected && styles.horizontalPickerItemActive,
               ]}
+              onPress={() => {
+                setCigaretteGoal(item);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }}
             >
-              {item}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.horizontalPickerItemText,
+                  isSelected && styles.horizontalPickerItemTextActive,
+                ]}
+              >
+                {item}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     );
   };
@@ -191,7 +197,7 @@ export default function SettingsScreen() {
   const morningSetupText = isGerman ? 'Morgen einrichten' : 'Setup Tomorrow';
   const wakeTimeLabel = isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME';
   const sleepTimeLabel = isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME';
-  const dailyGoalLabel = isGerman ? 'TAGESZIEL ZIGARETTEN' : 'DAILY CIGARETTE GOAL';
+  const dailyGoalLabel = isGerman ? 'TÄGLICHE ZIGARETTEN' : 'DAILY CIGARETTES';
   const scheduleAllDaysText = isGerman ? 'Zeitplan für alle Tage' : 'Schedule for all days';
   const applyAllDaysText = isGerman ? 'Änderungen auf alle Tage\nanwenden' : 'Apply changes to all days';
   const appearanceText = isGerman ? 'DARSTELLUNG' : 'APPEARANCE';
@@ -235,15 +241,6 @@ export default function SettingsScreen() {
           <View style={styles.timeRow}>
             <View style={styles.timeSection}>
               <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
-              <View style={styles.timeDisplay}>
-                <Text style={styles.timeValue}>
-                  {wakeHour.toString().padStart(2, '0')}
-                </Text>
-                <Text style={styles.timeColon}>:</Text>
-                <Text style={styles.timeValue}>
-                  {wakeMinute.toString().padStart(2, '0')}
-                </Text>
-              </View>
               <View style={styles.timePickerRow}>
                 {renderTimeScrollPicker(wakeHour, setWakeHour, 0, 23)}
                 {renderTimeScrollPicker(wakeMinute, setWakeMinute, 0, 59)}
@@ -252,15 +249,6 @@ export default function SettingsScreen() {
 
             <View style={styles.timeSection}>
               <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
-              <View style={styles.timeDisplay}>
-                <Text style={styles.timeValue}>
-                  {sleepHour.toString().padStart(2, '0')}
-                </Text>
-                <Text style={styles.timeColon}>:</Text>
-                <Text style={styles.timeValue}>
-                  {sleepMinute.toString().padStart(2, '0')}
-                </Text>
-              </View>
               <View style={styles.timePickerRow}>
                 {renderTimeScrollPicker(sleepHour, setSleepHour, 0, 23)}
                 {renderTimeScrollPicker(sleepMinute, setSleepMinute, 0, 59)}
@@ -270,9 +258,6 @@ export default function SettingsScreen() {
 
           <View style={styles.goalSection}>
             <Text style={styles.goalLabel}>{dailyGoalLabel}</Text>
-            <View style={styles.goalDisplay}>
-              <Text style={styles.goalValue}>{cigaretteGoal}</Text>
-            </View>
             {renderHorizontalCigarettePicker()}
           </View>
         </View>
@@ -525,23 +510,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  timeDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  timeValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  timeColon: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginHorizontal: 4,
+    marginBottom: 12,
   },
   timePickerRow: {
     flexDirection: 'row',
@@ -557,72 +526,66 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  goalDisplay: {
-    marginBottom: 12,
-  },
-  goalValue: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: colors.primary,
+    marginBottom: 16,
   },
   pickerColumn: {
     alignItems: 'center',
   },
   pickerScroll: {
-    height: 80,
-    width: 50,
+    height: 100,
+    width: 60,
   },
   pickerContent: {
-    paddingVertical: 20,
+    paddingVertical: 25,
   },
   pickerItem: {
-    height: 40,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 12,
+    marginVertical: 2,
   },
   pickerItemActive: {
-    backgroundColor: 'transparent',
+    backgroundColor: colors.primary,
   },
   pickerItemText: {
-    fontSize: 14,
+    fontSize: 18,
     color: colors.textSecondary,
+    fontWeight: '600',
   },
   pickerItemTextActive: {
-    fontSize: 18,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: colors.primary,
+    color: '#000000',
   },
   horizontalPickerScroll: {
-    height: 60,
+    height: 70,
   },
   horizontalPickerContent: {
     paddingHorizontal: 20,
     alignItems: 'center',
   },
   horizontalPickerItem: {
-    width: 60,
-    height: 50,
+    width: 70,
+    height: 60,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 5,
-    borderRadius: 12,
+    borderRadius: 16,
     backgroundColor: 'transparent',
   },
   horizontalPickerItemActive: {
-    backgroundColor: 'transparent',
+    backgroundColor: colors.primary,
   },
   horizontalPickerItemText: {
-    fontSize: 18,
+    fontSize: 22,
     color: colors.textSecondary,
     fontWeight: '600',
   },
   horizontalPickerItemTextActive: {
-    fontSize: 32,
+    fontSize: 42,
     fontWeight: 'bold',
-    color: colors.primary,
+    color: '#000000',
   },
   card: {
     borderRadius: 16,
