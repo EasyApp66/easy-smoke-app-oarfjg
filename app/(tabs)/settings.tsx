@@ -18,10 +18,8 @@ import { LegalModal } from '@/components/LegalModal';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Toast } from '@/components/ui/Toast';
-import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const { settings, updateSettings, validatePromoCode } = useApp();
   const [showLegal, setShowLegal] = useState(false);
   const [showPromoInput, setShowPromoInput] = useState(false);
@@ -35,7 +33,6 @@ export default function SettingsScreen() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
-  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   React.useEffect(() => {
     if (settings) {
@@ -84,14 +81,16 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleSignOut = () => {
-    console.log('User confirmed sign out - navigating to welcome screen');
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setShowSignOutConfirm(false);
-    router.replace('/');
+  const handlePremiumPurchase = (type: 'onetime' | 'monthly') => {
+    console.log('User tapped premium purchase:', type);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // TODO: Backend Integration - POST /api/premium/purchase with { type: 'onetime' | 'monthly', amount: 10 | 1 }
+    setToastMessage(isGerman ? 'Premium-Kauf wird verarbeitet...' : 'Processing premium purchase...');
+    setToastType('info');
+    setToastVisible(true);
   };
 
-  const renderHorizontalTimePicker = (
+  const renderVerticalTimePicker = (
     value: number,
     onChange: (val: number) => void,
     type: 'hour' | 'minute'
@@ -108,10 +107,9 @@ export default function SettingsScreen() {
     
     return (
       <ScrollView
-        horizontal
-        style={styles.horizontalTimePickerScroll}
-        contentContainerStyle={styles.horizontalTimePickerContent}
-        showsHorizontalScrollIndicator={false}
+        style={styles.verticalTimePickerScroll}
+        contentContainerStyle={styles.verticalTimePickerContent}
+        showsVerticalScrollIndicator={false}
         snapToInterval={70}
         decelerationRate="fast"
         onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
@@ -123,8 +121,8 @@ export default function SettingsScreen() {
             <TouchableOpacity
               key={item}
               style={[
-                styles.horizontalTimePickerItem,
-                isSelected && styles.horizontalTimePickerItemActive,
+                styles.verticalTimePickerItem,
+                isSelected && styles.verticalTimePickerItemActive,
               ]}
               onPress={() => {
                 onChange(item);
@@ -133,8 +131,8 @@ export default function SettingsScreen() {
             >
               <Text
                 style={[
-                  styles.horizontalTimePickerItemText,
-                  isSelected && styles.horizontalTimePickerItemTextActive,
+                  styles.verticalTimePickerItemText,
+                  isSelected && styles.verticalTimePickerItemTextActive,
                 ]}
               >
                 {item.toString().padStart(2, '0')}
@@ -211,15 +209,14 @@ export default function SettingsScreen() {
   const germanText = 'Deutsch';
   const englishText = 'English';
   const activeText = isGerman ? 'Aktiv' : 'Active';
-  const signOutText = isGerman ? 'Abmelden' : 'Sign Out';
   const legalText = isGerman ? 'Rechtliches' : 'Legal';
   const promoCodeText = isGerman ? 'Promo Code' : 'Promo Code';
   const enterCodeText = isGerman ? 'Code eingeben' : 'Enter code';
   const applyText = isGerman ? 'Anwenden' : 'Apply';
-  const signOutConfirmTitle = isGerman ? 'Abmelden?' : 'Sign Out?';
-  const signOutConfirmMessage = isGerman ? 'Möchten Sie sich wirklich abmelden?' : 'Are you sure you want to sign out?';
-  const cancelText = isGerman ? 'Abbrechen' : 'Cancel';
-  const confirmText = isGerman ? 'Abmelden' : 'Sign Out';
+  const premiumTitle = isGerman ? 'Premium Holen' : 'Get Premium';
+  const oneTimeText = isGerman ? 'Einmalige Zahlung' : 'One-time Payment';
+  const monthlyText = isGerman ? 'Monatlich' : 'Monthly';
+  const unlockText = isGerman ? 'Freischalten' : 'Unlock';
 
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
@@ -241,21 +238,23 @@ export default function SettingsScreen() {
             <Text style={styles.setupTitle}>{morningSetupText}</Text>
           </View>
 
-          <View style={styles.timeSection}>
-            <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
-            <View style={styles.horizontalTimeRow}>
-              {renderHorizontalTimePicker(wakeHour, setWakeHour, 'hour')}
-              <Text style={styles.timeSeparator}>:</Text>
-              {renderHorizontalTimePicker(wakeMinute, setWakeMinute, 'minute')}
+          <View style={styles.timePickersRow}>
+            <View style={styles.timePickerColumn}>
+              <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
+              <View style={styles.verticalTimeRow}>
+                {renderVerticalTimePicker(sleepHour, setSleepHour, 'hour')}
+                <Text style={styles.timeSeparatorVertical}>:</Text>
+                {renderVerticalTimePicker(sleepMinute, setSleepMinute, 'minute')}
+              </View>
             </View>
-          </View>
 
-          <View style={styles.timeSection}>
-            <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
-            <View style={styles.horizontalTimeRow}>
-              {renderHorizontalTimePicker(sleepHour, setSleepHour, 'hour')}
-              <Text style={styles.timeSeparator}>:</Text>
-              {renderHorizontalTimePicker(sleepMinute, setSleepMinute, 'minute')}
+            <View style={styles.timePickerColumn}>
+              <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
+              <View style={styles.verticalTimeRow}>
+                {renderVerticalTimePicker(wakeHour, setWakeHour, 'hour')}
+                <Text style={styles.timeSeparatorVertical}>:</Text>
+                {renderVerticalTimePicker(wakeMinute, setWakeMinute, 'minute')}
+              </View>
             </View>
           </View>
 
@@ -279,6 +278,43 @@ export default function SettingsScreen() {
             trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor={colors.text}
           />
+        </View>
+
+        <Text style={styles.sectionLabel}>{premiumTitle}</Text>
+        <View style={[styles.premiumCard, { backgroundColor: cardColor }]}>
+          <TouchableOpacity
+            style={styles.premiumOption}
+            onPress={() => handlePremiumPurchase('onetime')}
+          >
+            <View>
+              <Text style={styles.premiumOptionTitle}>{oneTimeText}</Text>
+              <Text style={styles.premiumPrice}>10 CHF</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name="chevron.right"
+              android_material_icon_name="chevron-right"
+              size={24}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+          
+          <View style={styles.premiumDivider} />
+          
+          <TouchableOpacity
+            style={styles.premiumOption}
+            onPress={() => handlePremiumPurchase('monthly')}
+          >
+            <View>
+              <Text style={styles.premiumOptionTitle}>{monthlyText}</Text>
+              <Text style={styles.premiumPrice}>1 CHF / {isGerman ? 'Monat' : 'Month'}</Text>
+            </View>
+            <IconSymbol
+              ios_icon_name="chevron.right"
+              android_material_icon_name="chevron-right"
+              size={24}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionLabel}>{appearanceText}</Text>
@@ -358,23 +394,6 @@ export default function SettingsScreen() {
             color={colors.textSecondary}
           />
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.settingRow, { backgroundColor: cardColor }]}
-          onPress={() => {
-            console.log('Sign out tapped');
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setShowSignOutConfirm(true);
-          }}
-        >
-          <Text style={styles.settingTitle}>{signOutText}</Text>
-          <IconSymbol
-            ios_icon_name="chevron.right"
-            android_material_icon_name="chevron-right"
-            size={24}
-            color={colors.textSecondary}
-          />
-        </TouchableOpacity>
       </ScrollView>
 
       <LegalModal
@@ -411,43 +430,6 @@ export default function SettingsScreen() {
               >
                 <Text style={styles.promoButtonText}>{applyText}</Text>
               </TouchableOpacity>
-            </View>
-          </BlurView>
-        </TouchableOpacity>
-      </Modal>
-
-      <Modal
-        visible={showSignOutConfirm}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowSignOutConfirm(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowSignOutConfirm(false)}
-        >
-          <BlurView intensity={80} style={styles.blurView}>
-            <View style={[styles.confirmModal, { backgroundColor: cardColor }]}>
-              <Text style={styles.confirmTitle}>{signOutConfirmTitle}</Text>
-              <Text style={styles.confirmMessage}>{signOutConfirmMessage}</Text>
-              <View style={styles.confirmButtons}>
-                <TouchableOpacity
-                  style={styles.cancelButton}
-                  onPress={() => {
-                    setShowSignOutConfirm(false);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  }}
-                >
-                  <Text style={styles.cancelButtonText}>{cancelText}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.confirmButton}
-                  onPress={handleSignOut}
-                >
-                  <Text style={styles.confirmButtonText}>{confirmText}</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </BlurView>
         </TouchableOpacity>
@@ -498,9 +480,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
   },
-  timeSection: {
-    alignItems: 'center',
+  timePickersRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 20,
+    gap: 16,
+  },
+  timePickerColumn: {
+    flex: 1,
+    alignItems: 'center',
   },
   timeLabel: {
     fontSize: 9,
@@ -509,43 +497,43 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 12,
   },
-  horizontalTimeRow: {
+  verticalTimeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
-  timeSeparator: {
+  timeSeparatorVertical: {
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
-  horizontalTimePickerScroll: {
-    height: 70,
-    maxWidth: 140,
+  verticalTimePickerScroll: {
+    height: 200,
+    width: 60,
   },
-  horizontalTimePickerContent: {
-    paddingHorizontal: 10,
+  verticalTimePickerContent: {
+    paddingVertical: 10,
     alignItems: 'center',
   },
-  horizontalTimePickerItem: {
+  verticalTimePickerItem: {
     width: 60,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 5,
+    marginVertical: 5,
     borderRadius: 16,
     backgroundColor: 'transparent',
   },
-  horizontalTimePickerItemActive: {
+  verticalTimePickerItemActive: {
     backgroundColor: colors.primary,
   },
-  horizontalTimePickerItemText: {
+  verticalTimePickerItemText: {
     fontSize: 24,
     color: colors.textSecondary,
     fontWeight: '600',
   },
-  horizontalTimePickerItemTextActive: {
+  verticalTimePickerItemTextActive: {
     fontSize: 36,
     fontWeight: 'bold',
     color: '#000000',
@@ -659,6 +647,33 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
+  premiumCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  premiumOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  premiumOptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  premiumPrice: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  premiumDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 8,
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -699,49 +714,5 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 16,
     fontWeight: '700',
-  },
-  confirmModal: {
-    borderRadius: 20,
-    padding: 24,
-    width: '80%',
-  },
-  confirmTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  confirmMessage: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    marginBottom: 24,
-  },
-  confirmButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  cancelButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: colors.backgroundGray,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  confirmButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: colors.error,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

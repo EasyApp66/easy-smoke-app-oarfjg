@@ -204,7 +204,7 @@ export default function HomeScreen() {
     });
   };
 
-  const renderHorizontalTimePicker = (
+  const renderVerticalTimePicker = (
     value: number,
     onChange: (val: number) => void,
     type: 'hour' | 'minute'
@@ -221,10 +221,9 @@ export default function HomeScreen() {
     
     return (
       <ScrollView
-        horizontal
-        style={styles.horizontalTimePickerScroll}
-        contentContainerStyle={styles.horizontalTimePickerContent}
-        showsHorizontalScrollIndicator={false}
+        style={styles.verticalTimePickerScroll}
+        contentContainerStyle={styles.verticalTimePickerContent}
+        showsVerticalScrollIndicator={false}
         snapToInterval={70}
         decelerationRate="fast"
         onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
@@ -236,8 +235,8 @@ export default function HomeScreen() {
             <TouchableOpacity
               key={item}
               style={[
-                styles.horizontalTimePickerItem,
-                isSelected && styles.horizontalTimePickerItemActive,
+                styles.verticalTimePickerItem,
+                isSelected && styles.verticalTimePickerItemActive,
               ]}
               onPress={() => {
                 onChange(item);
@@ -246,8 +245,8 @@ export default function HomeScreen() {
             >
               <Text
                 style={[
-                  styles.horizontalTimePickerItemText,
-                  isSelected && styles.horizontalTimePickerItemTextActive,
+                  styles.verticalTimePickerItemText,
+                  isSelected && styles.verticalTimePickerItemTextActive,
                 ]}
               >
                 {item.toString().padStart(2, '0')}
@@ -407,25 +406,27 @@ export default function HomeScreen() {
               )}
             </View>
 
-            <View style={styles.timeSection}>
-              <Text style={styles.timeLabel}>
-                {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
-              </Text>
-              <View style={styles.horizontalTimeRow}>
-                {renderHorizontalTimePicker(wakeHour, setWakeHour, 'hour')}
-                <Text style={styles.timeSeparator}>:</Text>
-                {renderHorizontalTimePicker(wakeMinute, setWakeMinute, 'minute')}
+            <View style={styles.timePickersRow}>
+              <View style={styles.timePickerColumn}>
+                <Text style={styles.timeLabel}>
+                  {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
+                </Text>
+                <View style={styles.verticalTimeRow}>
+                  {renderVerticalTimePicker(sleepHour, setSleepHour, 'hour')}
+                  <Text style={styles.timeSeparatorVertical}>:</Text>
+                  {renderVerticalTimePicker(sleepMinute, setSleepMinute, 'minute')}
+                </View>
               </View>
-            </View>
 
-            <View style={styles.timeSection}>
-              <Text style={styles.timeLabel}>
-                {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
-              </Text>
-              <View style={styles.horizontalTimeRow}>
-                {renderHorizontalTimePicker(sleepHour, setSleepHour, 'hour')}
-                <Text style={styles.timeSeparator}>:</Text>
-                {renderHorizontalTimePicker(sleepMinute, setSleepMinute, 'minute')}
+              <View style={styles.timePickerColumn}>
+                <Text style={styles.timeLabel}>
+                  {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
+                </Text>
+                <View style={styles.verticalTimeRow}>
+                  {renderVerticalTimePicker(wakeHour, setWakeHour, 'hour')}
+                  <Text style={styles.timeSeparatorVertical}>:</Text>
+                  {renderVerticalTimePicker(wakeMinute, setWakeMinute, 'minute')}
+                </View>
               </View>
             </View>
 
@@ -616,9 +617,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
   },
-  timeSection: {
-    alignItems: 'center',
+  timePickersRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 20,
+    gap: 16,
+  },
+  timePickerColumn: {
+    flex: 1,
+    alignItems: 'center',
   },
   timeLabel: {
     fontSize: 9,
@@ -627,43 +634,43 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 12,
   },
-  horizontalTimeRow: {
+  verticalTimeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
-  timeSeparator: {
+  timeSeparatorVertical: {
     fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
-  horizontalTimePickerScroll: {
-    height: 70,
-    maxWidth: 140,
+  verticalTimePickerScroll: {
+    height: 200,
+    width: 60,
   },
-  horizontalTimePickerContent: {
-    paddingHorizontal: 10,
+  verticalTimePickerContent: {
+    paddingVertical: 10,
     alignItems: 'center',
   },
-  horizontalTimePickerItem: {
+  verticalTimePickerItem: {
     width: 60,
     height: 60,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 5,
+    marginVertical: 5,
     borderRadius: 16,
     backgroundColor: 'transparent',
   },
-  horizontalTimePickerItemActive: {
+  verticalTimePickerItemActive: {
     backgroundColor: colors.primary,
   },
-  horizontalTimePickerItemText: {
+  verticalTimePickerItemText: {
     fontSize: 24,
     color: colors.textSecondary,
     fontWeight: '600',
   },
-  horizontalTimePickerItemTextActive: {
+  verticalTimePickerItemTextActive: {
     fontSize: 36,
     fontWeight: 'bold',
     color: '#000000',

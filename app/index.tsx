@@ -42,7 +42,7 @@ export default function WelcomeScreen() {
   const goButtonText = 'GO';
   const legalText = 'Rechtliches';
 
-  const backgroundImage = require('@/assets/images/e7d86ef3-a64e-4f83-8240-b1adda1a0005.png');
+  const backgroundImage = require('@/assets/images/2713f956-871f-47e1-bc3d-fe31d50d0f0d.png');
 
   return (
     <ImageBackground
@@ -53,7 +53,7 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{beSmartText}</Text>
-          <Text style={styles.title}>{smokeLessText}</Text>
+          <Text style={styles.titleSmaller}>{smokeLessText}</Text>
         </View>
 
         <View style={styles.subtitlesContainer}>
@@ -113,6 +113,13 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textAlign: 'left',
   },
+  titleSmaller: {
+    fontSize: width < 380 ? 28 : 32,
+    fontWeight: 'bold',
+    color: colors.text,
+    letterSpacing: 2,
+    textAlign: 'left',
+  },
   subtitlesContainer: {
     alignItems: 'flex-start',
     marginBottom: Platform.OS === 'ios' ? 48 : 40,
@@ -131,7 +138,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 16,
     paddingVertical: 18,
-    paddingHorizontal: 80,
+    paddingHorizontal: 100,
     marginBottom: 24,
   },
   goButtonText: {
