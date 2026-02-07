@@ -164,7 +164,7 @@ export default function HomeScreen() {
           style={styles.pickerScroll}
           contentContainerStyle={styles.pickerContent}
           showsVerticalScrollIndicator={false}
-          snapToInterval={40}
+          snapToInterval={32}
           decelerationRate="fast"
         >
           {items.map((item) => (
@@ -276,7 +276,7 @@ export default function HomeScreen() {
                 <IconSymbol
                   ios_icon_name="calendar"
                   android_material_icon_name="calendar-today"
-                  size={24}
+                  size={20}
                   color={colors.primary}
                 />
                 <Text style={styles.setupTitle}>{dynamicTitle}</Text>
@@ -286,7 +286,7 @@ export default function HomeScreen() {
                   <IconSymbol
                     ios_icon_name="xmark"
                     android_material_icon_name="close"
-                    size={24}
+                    size={20}
                     color={colors.textSecondary}
                   />
                 </TouchableOpacity>
@@ -352,7 +352,7 @@ export default function HomeScreen() {
                 <IconSymbol
                   ios_icon_name="pencil"
                   android_material_icon_name="edit"
-                  size={22}
+                  size={20}
                   color={colors.primary}
                 />
               </TouchableOpacity>
@@ -391,7 +391,7 @@ export default function HomeScreen() {
                       <IconSymbol
                         ios_icon_name="checkmark"
                         android_material_icon_name="check"
-                        size={18}
+                        size={16}
                         color={colors.checkboxGray}
                       />
                     </View>
@@ -415,6 +415,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingTop: 60,
     paddingBottom: 140,
   },
   loadingText: {
@@ -426,15 +427,15 @@ const styles = StyleSheet.create({
   calendarContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
-    paddingHorizontal: 4,
+    marginBottom: 24,
+    paddingHorizontal: 2,
   },
   dayButton: {
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    minWidth: 64,
+    paddingVertical: 20,
+    paddingHorizontal: 18,
+    borderRadius: 24,
+    minWidth: 70,
     backgroundColor: 'transparent',
   },
   dayButtonActive: {
@@ -446,27 +447,27 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   dayNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 38,
+    fontWeight: '800',
     color: colors.text,
-    marginBottom: 6,
-    letterSpacing: 1,
+    marginBottom: 8,
+    letterSpacing: 1.5,
   },
   dayNumberActive: {
     color: colors.text,
   },
   dayName: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.textSecondary,
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   dayNameActive: {
     color: colors.text,
   },
   countCard: {
     borderRadius: 20,
-    padding: 32,
+    padding: 28,
     alignItems: 'center',
     marginBottom: 20,
   },
@@ -481,63 +482,63 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   setupCard: {
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 20,
+    padding: 18,
   },
   setupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 18,
   },
   setupHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   setupTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
-    gap: 16,
+    marginBottom: 18,
+    gap: 12,
   },
   timeSection: {
     flex: 1,
     alignItems: 'center',
   },
   timeLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   timePickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   timeSeparator: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.primary,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
   goalSection: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginBottom: 18,
   },
   goalLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   goalPicker: {
     alignItems: 'center',
@@ -546,54 +547,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerScroll: {
-    height: 120,
-    width: 70,
+    height: 96,
+    width: 60,
   },
   pickerContent: {
-    paddingVertical: 40,
+    paddingVertical: 32,
   },
   pickerItem: {
-    height: 40,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: 8,
   },
   pickerItemActive: {
     backgroundColor: colors.primary,
   },
   pickerItemText: {
-    fontSize: 20,
+    fontSize: 16,
     color: colors.textSecondary,
   },
   pickerItemTextActive: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
   },
   setupButton: {
     backgroundColor: colors.primary,
-    borderRadius: 16,
-    padding: 18,
+    borderRadius: 14,
+    padding: 14,
     alignItems: 'center',
   },
   setupButtonText: {
     color: colors.text,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
   },
   alarmsCard: {
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     minHeight: 500,
   },
   alarmsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 18,
   },
   alarmsTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
   },
@@ -608,9 +609,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: colors.cardGray,
-    borderRadius: 14,
-    padding: 18,
-    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
   },
   alarmItemUpcoming: {
     borderWidth: 2,
@@ -619,10 +620,10 @@ const styles = StyleSheet.create({
   alarmLeftContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   alarmTime: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
   },
@@ -631,19 +632,19 @@ const styles = StyleSheet.create({
   },
   alarmBadge: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   alarmBadgeText: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   alarmCheckbox: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.backgroundGray,
     justifyContent: 'center',
     alignItems: 'center',

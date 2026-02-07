@@ -107,7 +107,7 @@ export default function SettingsScreen() {
           style={styles.pickerScroll}
           contentContainerStyle={styles.pickerContent}
           showsVerticalScrollIndicator={false}
-          snapToInterval={40}
+          snapToInterval={32}
           decelerationRate="fast"
         >
           {items.map((item) => (
@@ -180,7 +180,7 @@ export default function SettingsScreen() {
             <IconSymbol
               ios_icon_name="calendar"
               android_material_icon_name="calendar-today"
-              size={24}
+              size={20}
               color={colors.primary}
             />
             <Text style={styles.setupTitle}>{morningSetupText}</Text>
@@ -423,59 +423,59 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   setupCard: {
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 16,
   },
   setupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
-    gap: 12,
+    marginBottom: 18,
+    gap: 10,
   },
   setupTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.text,
   },
   timeRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
-    gap: 16,
+    marginBottom: 18,
+    gap: 12,
   },
   timeSection: {
     flex: 1,
     alignItems: 'center',
   },
   timeLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: Platform.OS === 'ios' ? 16 : 12,
+    marginBottom: 12,
   },
   timePickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
   timeSeparator: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.primary,
-    marginHorizontal: 4,
+    marginHorizontal: 2,
   },
   goalSection: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   goalLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: Platform.OS === 'ios' ? 16 : 12,
+    marginBottom: 12,
   },
   goalPicker: {
     alignItems: 'center',
@@ -484,27 +484,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickerScroll: {
-    height: 120,
-    width: 70,
+    height: 96,
+    width: 60,
   },
   pickerContent: {
-    paddingVertical: 40,
+    paddingVertical: 32,
   },
   pickerItem: {
-    height: 40,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: 8,
   },
   pickerItemActive: {
     backgroundColor: colors.primary,
   },
   pickerItemText: {
-    fontSize: 20,
+    fontSize: 16,
     color: colors.textSecondary,
   },
   pickerItemTextActive: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.text,
   },
