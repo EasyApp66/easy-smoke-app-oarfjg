@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 28,
   },
   setupHeaderLeft: {
     flexDirection: 'row',
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   timePickersRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 32,
     gap: 16,
   },
   timePickerColumn: {
@@ -789,13 +789,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   compactCigarettePickerContainer: {
     height: 80,
     width: '100%',
     position: 'relative',
     overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cigarettePickerItem: {
     height: 80,
@@ -806,6 +808,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: '#888888',
+    textAlign: 'center',
   },
   cigarettePickerTextSelected: {
     color: '#FFFFFF',
@@ -815,7 +818,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: '50%',
-    marginLeft: -50,
+    transform: [{ translateX: -50 }],
     width: 100,
     backgroundColor: colors.primary,
     borderRadius: 16,
