@@ -21,6 +21,171 @@ import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Toast } from '@/components/ui/Toast';
 
+// Vertical Time Picker Component
+function VerticalTimePicker({
+  hourValue,
+  minuteValue,
+  onHourChange,
+  onMinuteChange,
+}: {
+  hourValue: number;
+  minuteValue: number;
+  onHourChange: (val: number) => void;
+  onMinuteChange: (val: number) => void;
+}) {
+  const hours = Array.from({ length: 24 }, (_, i) => i);
+  const minutes = [0, 15, 30, 45];
+  const ITEM_HEIGHT = 50;
+
+  const hourScrollRef = React.useRef<ScrollView>(null);
+  const minuteScrollRef = React.useRef<ScrollView>(null);
+
+  React.useEffect(() => {
+    const hourIndex = hours.indexOf(hourValue);
+    const minuteIndex = minutes.indexOf(minuteValue);
+    
+    if (hourScrollRef.current && hourIndex !== -1) {
+      setTimeout(() => {
+        hourScrollRef.current?.scrollTo({
+          y: hourIndex * ITEM_HEIGHT,
+          animated: false,
+        });
+      }, 100);
+    }
+    
+    if (minuteScrollRef.current && minuteIndex !== -1) {
+      setTimeout(() => {
+        minuteScrollRef.current?.scrollTo({
+          y: minuteIndex * ITEM_HEIGHT,
+          animated: false,
+        });
+      }, 100);
+    }
+  }, [hourValue, minuteValue]);
+
+  const handleHourScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / ITEM_HEIGHT);
+    if (index >= 0 && index < hours.length && hours[index] !== hourValue) {
+      onHourChange(hours[index]);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handleMinuteScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / ITEM_HEIGHT);
+    if (index >= 0 && index < minutes.length && minutes[index] !== minuteValue) {
+      onMinuteChange(minutes[index]);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  return (
+    <View style={styles.verticalTimePickerContainer}>
+      <View style={styles.verticalPickersRow}>
+        <View style={styles.verticalPickerColumn}>
+          <ScrollView
+            ref={hourScrollRef}
+            showsVerticalScrollIndicator={false}
+            snapToInterval={ITEM_HEIGHT}
+            decelerationRate="fast"
+            onMomentumScrollEnd={handleHourScroll}
+            contentContainerStyle={{ paddingVertical: ITEM_HEIGHT }}
+            scrollEventThrottle={16}
+          >
+            {hours.map((item) => (
+              <View key={`hour-${item}`} style={[styles.verticalPickerItem, { height: ITEM_HEIGHT }]}>
+                <Text style={styles.verticalPickerText}>{item.toString().padStart(2, '0')}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+        
+        <Text style={styles.verticalTimeSeparator}>:</Text>
+        
+        <View style={styles.verticalPickerColumn}>
+          <ScrollView
+            ref={minuteScrollRef}
+            showsVerticalScrollIndicator={false}
+            snapToInterval={ITEM_HEIGHT}
+            decelerationRate="fast"
+            onMomentumScrollEnd={handleMinuteScroll}
+            contentContainerStyle={{ paddingVertical: ITEM_HEIGHT }}
+            scrollEventThrottle={16}
+          >
+            {minutes.map((item) => (
+              <View key={`minute-${item}`} style={[styles.verticalPickerItem, { height: ITEM_HEIGHT }]}>
+                <Text style={styles.verticalPickerText}>{item.toString().padStart(2, '0')}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+      
+      <View style={styles.verticalGreenLens} pointerEvents="none" />
+    </View>
+  );
+}
+
+// Horizontal Cigarette Picker Component
+function HorizontalCigarettePicker({
+  value,
+  onValueChange,
+}: {
+  value: number;
+  onValueChange: (val: number) => void;
+}) {
+  const items = Array.from({ length: 50 }, (_, i) => i + 1);
+  const ITEM_WIDTH = 100;
+
+  const cigaretteScrollRef = React.useRef<ScrollView>(null);
+
+  React.useEffect(() => {
+    const index = value - 1;
+    if (cigaretteScrollRef.current && index >= 0) {
+      setTimeout(() => {
+        cigaretteScrollRef.current?.scrollTo({
+          x: index * ITEM_WIDTH,
+          animated: false,
+        });
+      }, 100);
+    }
+  }, [value]);
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / ITEM_WIDTH);
+    if (index >= 0 && index < items.length && items[index] !== value) {
+      onValueChange(items[index]);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  return (
+    <View style={styles.compactCigarettePickerContainer}>
+      <ScrollView
+        ref={cigaretteScrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={ITEM_WIDTH}
+        decelerationRate="fast"
+        onMomentumScrollEnd={handleScroll}
+        contentContainerStyle={{ paddingHorizontal: ITEM_WIDTH }}
+        scrollEventThrottle={16}
+      >
+        {items.map((item) => (
+          <View key={`cig-${item}`} style={[styles.cigarettePickerItem, { width: ITEM_WIDTH }]}>
+            <Text style={styles.cigarettePickerText}>{item}</Text>
+          </View>
+        ))}
+      </ScrollView>
+      
+      <View style={styles.horizontalGreenLens} pointerEvents="none" />
+    </View>
+  );
+}
+
 export default function SettingsScreen() {
   const { settings, updateSettings, validatePromoCode } = useApp();
   const [showLegal, setShowLegal] = useState(false);
@@ -91,144 +256,6 @@ export default function SettingsScreen() {
     setToastVisible(true);
   };
 
-  const renderCompactTimePicker = (
-    hourValue: number,
-    minuteValue: number,
-    onHourChange: (val: number) => void,
-    onMinuteChange: (val: number) => void
-  ) => {
-    const hours = Array.from({ length: 24 }, (_, i) => i);
-    const minutes = [0, 15, 30, 45];
-    
-    const ITEM_WIDTH = 80;
-
-    const handleHourScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      const index = Math.round(offsetX / ITEM_WIDTH);
-      if (index >= 0 && index < hours.length && hours[index] !== hourValue) {
-        onHourChange(hours[index]);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-    };
-
-    const handleMinuteScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      const index = Math.round(offsetX / ITEM_WIDTH);
-      if (index >= 0 && index < minutes.length && minutes[index] !== minuteValue) {
-        onMinuteChange(minutes[index]);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-    };
-
-    return (
-      <View style={styles.compactTimePickerContainer}>
-        <View style={styles.compactTimeDisplay}>
-          <Text style={styles.compactTimeText}>
-            {hourValue.toString().padStart(2, '0')}
-          </Text>
-          <Text style={styles.compactTimeSeparator}>:</Text>
-          <Text style={styles.compactTimeText}>
-            {minuteValue.toString().padStart(2, '0')}
-          </Text>
-        </View>
-        
-        <View style={styles.hiddenPickersContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={ITEM_WIDTH}
-            decelerationRate="fast"
-            onMomentumScrollEnd={handleHourScroll}
-            contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
-            scrollEventThrottle={16}
-          >
-            {hours.map((item) => (
-              <View key={`hour-${item}`} style={[styles.hiddenPickerItem, { width: ITEM_WIDTH }]}>
-                <Text style={styles.hiddenPickerText}>{item.toString().padStart(2, '0')}</Text>
-              </View>
-            ))}
-          </ScrollView>
-          
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={ITEM_WIDTH}
-            decelerationRate="fast"
-            onMomentumScrollEnd={handleMinuteScroll}
-            contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
-            scrollEventThrottle={16}
-          >
-            {minutes.map((item) => (
-              <View key={`minute-${item}`} style={[styles.hiddenPickerItem, { width: ITEM_WIDTH }]}>
-                <Text style={styles.hiddenPickerText}>{item.toString().padStart(2, '0')}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-    );
-  };
-
-  const renderCompactCigarettePicker = () => {
-    const items = Array.from({ length: 50 }, (_, i) => i + 1);
-    const ITEM_WIDTH = 100;
-
-    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      const index = Math.round(offsetX / ITEM_WIDTH);
-      if (index >= 0 && index < items.length && items[index] !== cigaretteGoal) {
-        setCigaretteGoal(items[index]);
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-    };
-
-    return (
-      <View style={styles.compactCigarettePickerContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={ITEM_WIDTH}
-          decelerationRate="fast"
-          onMomentumScrollEnd={handleScroll}
-          contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
-          scrollEventThrottle={16}
-        >
-          {items.map((item, index) => {
-            const currentIndex = cigaretteGoal - 1;
-            const distance = Math.abs(index - currentIndex);
-            
-            const isSelected = distance === 0;
-            const isAdjacent = distance === 1;
-            const isVisible = distance <= 1;
-
-            if (!isVisible) {
-              return <View key={`cig-${item}`} style={[styles.cigarettePickerItem, { width: ITEM_WIDTH, opacity: 0 }]} />;
-            }
-
-            return (
-              <View
-                key={`cig-${item}`}
-                style={[
-                  styles.cigarettePickerItem,
-                  { width: ITEM_WIDTH },
-                  isSelected && styles.cigarettePickerItemSelected,
-                ]}
-              >
-                <Text style={[
-                  styles.cigarettePickerText,
-                  isSelected && styles.cigarettePickerTextSelected,
-                  isAdjacent && styles.cigarettePickerTextAdjacent,
-                ]}>
-                  {item}
-                </Text>
-              </View>
-            );
-          })}
-        </ScrollView>
-      </View>
-    );
-  };
-
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;
   const cardColor = settings?.backgroundColor === 'black' ? colors.cardBlack : colors.cardGray;
   const isGerman = settings?.language === 'de';
@@ -280,18 +307,31 @@ export default function SettingsScreen() {
           <View style={styles.timePickersRow}>
             <View style={styles.timePickerColumn}>
               <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
-              {renderCompactTimePicker(sleepHour, sleepMinute, setSleepHour, setSleepMinute)}
+              <VerticalTimePicker
+                hourValue={sleepHour}
+                minuteValue={sleepMinute}
+                onHourChange={setSleepHour}
+                onMinuteChange={setSleepMinute}
+              />
             </View>
 
             <View style={styles.timePickerColumn}>
               <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
-              {renderCompactTimePicker(wakeHour, wakeMinute, setWakeHour, setWakeMinute)}
+              <VerticalTimePicker
+                hourValue={wakeHour}
+                minuteValue={wakeMinute}
+                onHourChange={setWakeHour}
+                onMinuteChange={setWakeMinute}
+              />
             </View>
           </View>
 
           <View style={styles.goalSection}>
             <Text style={styles.goalLabel}>{dailyGoalLabel}</Text>
-            {renderCompactCigarettePicker()}
+            <HorizontalCigarettePicker
+              value={cigaretteGoal}
+              onValueChange={setCigaretteGoal}
+            />
           </View>
         </View>
 
@@ -528,47 +568,46 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 12,
   },
-  compactTimePickerContainer: {
-    alignItems: 'center',
-    height: 80,
+  verticalTimePickerContainer: {
+    height: 150,
+    width: '100%',
+    position: 'relative',
     overflow: 'hidden',
   },
-  compactTimeDisplay: {
+  verticalPickersRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 16,
-    zIndex: 10,
+    justifyContent: 'center',
+    height: 150,
   },
-  compactTimeText: {
+  verticalPickerColumn: {
+    height: 150,
+    width: 60,
+  },
+  verticalTimeSeparator: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#000000',
+    color: colors.text,
+    marginHorizontal: 8,
   },
-  compactTimeSeparator: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginHorizontal: 4,
-  },
-  hiddenPickersContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    opacity: 0,
-    height: 80,
-  },
-  hiddenPickerItem: {
+  verticalPickerItem: {
     justifyContent: 'center',
     alignItems: 'center',
-    height: 60,
   },
-  hiddenPickerText: {
+  verticalPickerText: {
     fontSize: 24,
+    fontWeight: '600',
     color: colors.text,
+  },
+  verticalGreenLens: {
+    position: 'absolute',
+    top: 50,
+    left: 0,
+    right: 0,
+    height: 50,
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    opacity: 0.9,
   },
   goalSection: {
     alignItems: 'center',
@@ -583,31 +622,30 @@ const styles = StyleSheet.create({
   },
   compactCigarettePickerContainer: {
     height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: '100%',
+    position: 'relative',
+    overflow: 'hidden',
   },
   cigarettePickerItem: {
     height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 16,
-  },
-  cigarettePickerItemSelected: {
-    backgroundColor: colors.primary,
   },
   cigarettePickerText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  cigarettePickerTextSelected: {
-    fontSize: 42,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#000000',
-  },
-  cigarettePickerTextAdjacent: {
-    fontSize: 28,
     color: colors.text,
+  },
+  horizontalGreenLens: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: '50%',
+    marginLeft: -50,
+    width: 100,
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    opacity: 0.9,
   },
   card: {
     borderRadius: 16,
