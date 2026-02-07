@@ -7,11 +7,20 @@ import {
   TouchableOpacity,
   Platform,
   Dimensions,
+  ImageBackground,
+  ImageSourcePropType,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { LegalModal } from '@/components/LegalModal';
 import * as Haptics from 'expo-haptics';
+
+// Helper to resolve image sources (handles both local require() and remote URLs)
+function resolveImageSource(source: string | number | ImageSourcePropType | undefined): ImageSourcePropType {
+  if (!source) return { uri: '' };
+  if (typeof source === 'string') return { uri: source };
+  return source as ImageSourcePropType;
+}
 
 const { width } = Dimensions.get('window');
 
@@ -33,8 +42,14 @@ export default function WelcomeScreen() {
   const goButtonText = 'GO';
   const legalText = 'Rechtliches';
 
+  const backgroundImage = require('@/assets/images/154e8857-b25b-4eb5-8b3b-cee3a0346f7a.png');
+
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      source={resolveImageSource(backgroundImage)}
+      style={styles.container}
+      resizeMode="cover"
+    >
       <View style={styles.content}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{beSmartText}</Text>
@@ -73,14 +88,13 @@ export default function WelcomeScreen() {
         onClose={() => setShowLegal(false)}
         language="de"
       />
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A4D2E',
     paddingTop: Platform.OS === 'android' ? 48 : 0,
   },
   content: {
