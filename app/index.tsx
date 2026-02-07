@@ -46,7 +46,9 @@ export default function WelcomeScreen() {
           <Text style={styles.subtitle}>{subtitle2Text}</Text>
           <Text style={styles.subtitle}>{subtitle3Text}</Text>
         </View>
+      </View>
 
+      <View style={styles.bottomSection}>
         <TouchableOpacity
           style={styles.goButton}
           onPress={handleContinue}
@@ -54,17 +56,17 @@ export default function WelcomeScreen() {
         >
           <Text style={styles.goButtonText}>{goButtonText}</Text>
         </TouchableOpacity>
-      </View>
 
-      <TouchableOpacity
-        style={styles.legalButton}
-        onPress={() => {
-          console.log('Legal button tapped');
-          setShowLegal(true);
-        }}
-      >
-        <Text style={styles.legalButtonText}>{legalText}</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.legalButton}
+          onPress={() => {
+            console.log('Legal button tapped');
+            setShowLegal(true);
+          }}
+        >
+          <Text style={styles.legalButtonText}>{legalText}</Text>
+        </TouchableOpacity>
+      </View>
 
       <LegalModal
         visible={showLegal}
@@ -107,12 +109,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'left',
   },
+  bottomSection: {
+    alignItems: 'center',
+    paddingBottom: Platform.OS === 'ios' ? 60 : 40,
+  },
   goButton: {
     backgroundColor: colors.primary,
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 80,
-    alignSelf: 'flex-start',
+    marginBottom: 24,
   },
   goButtonText: {
     color: colors.text,
@@ -122,8 +128,6 @@ const styles = StyleSheet.create({
   },
   legalButton: {
     padding: 16,
-    alignSelf: 'center',
-    marginBottom: Platform.OS === 'ios' ? 40 : 24,
   },
   legalButtonText: {
     color: colors.text,

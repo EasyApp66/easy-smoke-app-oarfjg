@@ -28,6 +28,7 @@ export default function HomeScreen() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+  const [showSetupModal, setShowSetupModal] = useState(false);
 
   const dayAnimation = useRef(new Animated.Value(0)).current;
 
@@ -128,6 +129,7 @@ export default function HomeScreen() {
     await saveLogForDate(dateString, wakeTimeStr, sleepTimeStr, cigaretteGoal);
     calculateAlarms(wakeTimeStr, sleepTimeStr, cigaretteGoal);
     setIsSetup(true);
+    setShowSetupModal(false);
     setToastMessage('Tag erfolgreich eingerichtet!');
     setToastType('success');
     setToastVisible(true);
@@ -163,6 +165,12 @@ export default function HomeScreen() {
       tension: 50,
       friction: 7,
     }).start();
+  };
+
+  const handleEditAlarms = () => {
+    console.log('User tapped edit alarms icon');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowSetupModal(true);
   };
 
   const renderScrollPicker = (
@@ -288,16 +296,28 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {!isSetup ? (
+        {(!isSetup || showSetupModal) && (
           <View style={[styles.setupCard, { backgroundColor: cardColor }]}>
             <View style={styles.setupHeader}>
-              <IconSymbol
-                ios_icon_name="calendar"
-                android_material_icon_name="calendar-today"
-                size={24}
-                color={colors.primary}
-              />
-              <Text style={styles.setupTitle}>{dynamicTitle}</Text>
+              <View style={styles.setupHeaderLeft}>
+                <IconSymbol
+                  ios_icon_name="calendar"
+                  android_material_icon_name="calendar-today"
+                  size={24}
+                  color={colors.primary}
+                />
+                <Text style={styles.setupTitle}>{dynamicTitle}</Text>
+              </View>
+              {isSetup && (
+                <TouchableOpacity onPress={() => setShowSetupModal(false)}>
+                  <IconSymbol
+                    ios_icon_name="xmark"
+                    android_material_icon_name="close"
+                    size={24}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
 
             <View style={styles.timeRow}>
@@ -347,12 +367,22 @@ export default function HomeScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        )}
+
+        {isSetup && !showSetupModal && (
           <View style={[styles.alarmsCard, { backgroundColor: cardColor }]}>
             <View style={styles.alarmsHeader}>
               <Text style={styles.alarmsTitle}>
                 {isGerman ? 'Deine Wecker' : 'Your Alarms'}
               </Text>
+              <TouchableOpacity onPress={handleEditAlarms} style={styles.editButton}>
+                <IconSymbol
+                  ios_icon_name="pencil"
+                  android_material_icon_name="edit"
+                  size={22}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
             </View>
             
             <ScrollView style={styles.alarmsList} showsVerticalScrollIndicator={false}>
@@ -436,9 +466,10 @@ const styles = StyleSheet.create({
   },
   dayButton: {
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 16,
-    minWidth: 56,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    minWidth: 64,
     backgroundColor: 'transparent',
   },
   dayButtonActive: {
@@ -450,17 +481,20 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   dayNumber: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: 1,
   },
   dayNumberActive: {
     color: colors.text,
   },
   dayName: {
-    fontSize: 12,
+    fontSize: 14,
+    fontWeight: '600',
     color: colors.textSecondary,
+    letterSpacing: 0.5,
   },
   dayNameActive: {
     color: colors.text,
@@ -472,7 +506,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   countValue: {
-    fontSize: 72,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
     marginBottom: 8,
@@ -488,7 +522,12 @@ const styles = StyleSheet.create({
   setupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 24,
+  },
+  setupHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
   setupTitle: {
@@ -583,12 +622,18 @@ const styles = StyleSheet.create({
     minHeight: 500,
   },
   alarmsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
   },
   alarmsTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     color: colors.text,
+  },
+  editButton: {
+    padding: 8,
   },
   alarmsList: {
     flex: 1,
@@ -610,10 +655,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-  },
-  alarmTimeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   alarmTime: {
     fontSize: 28,
