@@ -138,7 +138,7 @@ export default function FloatingTabBar({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['bottom']}>
+    <View style={styles.outerContainer}>
       <View style={[
         styles.container,
         {
@@ -178,12 +178,12 @@ export default function FloatingTabBar({
           </View>
         </BlurView>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  outerContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
@@ -191,10 +191,11 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     alignItems: 'center',
     backgroundColor: 'transparent',
+    pointerEvents: 'box-none',
   },
   container: {
-    marginHorizontal: 20,
     alignSelf: 'center',
+    pointerEvents: 'auto',
   },
   blurContainer: {
     overflow: 'hidden',

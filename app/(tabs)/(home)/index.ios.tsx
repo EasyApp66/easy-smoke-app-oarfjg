@@ -113,6 +113,47 @@ export default function HomeScreen() {
     setAlarms(alarmList);
   };
 
+  const calculateTimeUntilAlarm = (alarmTime: string) => {
+    const now = new Date();
+    const [alarmHour, alarmMinute] = alarmTime.split(':').map(Number);
+    
+    const alarmDate = new Date();
+    alarmDate.setHours(alarmHour, alarmMinute, 0, 0);
+    
+    if (alarmDate < now) {
+      alarmDate.setDate(alarmDate.getDate() + 1);
+    }
+    
+    const diffMs = alarmDate.getTime() - now.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const remainingMinutes = diffMinutes % 60;
+    
+    const isGerman = settings?.language === 'de';
+    
+    if (diffHours > 0) {
+      return isGerman ? `in ${diffHours} Std` : `in ${diffHours} hrs`;
+    } else {
+      return isGerman ? `in ${remainingMinutes} Min` : `in ${remainingMinutes} min`;
+    }
+  };
+
+  const findNextAlarmIndex = () => {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    for (let i = 0; i < alarms.length; i++) {
+      const [alarmHour, alarmMinute] = alarms[i].split(':').map(Number);
+      const alarmMinutes = alarmHour * 60 + alarmMinute;
+      
+      if (alarmMinutes > currentMinutes && !checkedAlarms.has(i)) {
+        return i;
+      }
+    }
+    
+    return -1;
+  };
+
   const handleSetupDay = async () => {
     console.log('User tapped setup day button');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -163,55 +204,58 @@ export default function HomeScreen() {
     });
   };
 
-  const renderTimeScrollPicker = (
+  const renderHorizontalTimePicker = (
     value: number,
     onChange: (val: number) => void,
-    min: number,
-    max: number
+    type: 'hour' | 'minute'
   ) => {
-    const items = [];
-    for (let i = min; i <= max; i++) {
-      items.push(i);
+    let items: number[] = [];
+    
+    if (type === 'hour') {
+      for (let i = 0; i <= 23; i++) {
+        items.push(i);
+      }
+    } else {
+      items = [0, 15, 30, 45];
     }
     
     return (
-      <View style={styles.pickerColumn}>
-        <ScrollView
-          style={styles.pickerScroll}
-          contentContainerStyle={styles.pickerContent}
-          showsVerticalScrollIndicator={false}
-          snapToInterval={50}
-          decelerationRate="fast"
-          onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-          scrollEventThrottle={100}
-        >
-          {items.map((item) => {
-            const isSelected = value === item;
-            return (
-              <TouchableOpacity
-                key={item}
+      <ScrollView
+        horizontal
+        style={styles.horizontalTimePickerScroll}
+        contentContainerStyle={styles.horizontalTimePickerContent}
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={70}
+        decelerationRate="fast"
+        onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        scrollEventThrottle={100}
+      >
+        {items.map((item) => {
+          const isSelected = value === item;
+          return (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.horizontalTimePickerItem,
+                isSelected && styles.horizontalTimePickerItemActive,
+              ]}
+              onPress={() => {
+                onChange(item);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }}
+            >
+              <Text
                 style={[
-                  styles.pickerItem,
-                  isSelected && styles.pickerItemActive,
+                  styles.horizontalTimePickerItemText,
+                  isSelected && styles.horizontalTimePickerItemTextActive,
                 ]}
-                onPress={() => {
-                  onChange(item);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
               >
-                <Text
-                  style={[
-                    styles.pickerItemText,
-                    isSelected && styles.pickerItemTextActive,
-                  ]}
-                >
-                  {item.toString().padStart(2, '0')}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+                {item.toString().padStart(2, '0')}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     );
   };
 
@@ -265,9 +309,8 @@ export default function HomeScreen() {
   const cardColor = settings?.backgroundColor === 'black' ? colors.cardBlack : colors.cardGray;
   const isGerman = settings?.language === 'de';
 
-  const cigarettesSmoked = currentLog?.cigarettesSmoked || 0;
-  const cigarettesTotal = currentLog?.cigarettesGoal || 0;
-  const countDisplay = `${cigarettesSmoked}/${cigarettesTotal}`;
+  const checkedCount = checkedAlarms.size;
+  const countDisplay = `${checkedCount}`;
   const readyText = isGerman ? 'Anzahl Zigaretten' : 'Cigarette Count';
 
   const dayNames = isGerman 
@@ -281,7 +324,7 @@ export default function HomeScreen() {
 
   const dynamicTitle = getDynamicTitle();
   const isPastDay = selectedDay < 2;
-  const checkedCount = checkedAlarms.size;
+  const nextAlarmIndex = findNextAlarmIndex();
 
   if (isLoading) {
     const loadingText = isGerman ? 'Laden...' : 'Loading...';
@@ -364,25 +407,25 @@ export default function HomeScreen() {
               )}
             </View>
 
-            <View style={styles.timeRow}>
-              <View style={styles.timeSection}>
-                <Text style={styles.timeLabel}>
-                  {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
-                </Text>
-                <View style={styles.timePickerRow}>
-                  {renderTimeScrollPicker(wakeHour, setWakeHour, 0, 23)}
-                  {renderTimeScrollPicker(wakeMinute, setWakeMinute, 0, 59)}
-                </View>
+            <View style={styles.timeSection}>
+              <Text style={styles.timeLabel}>
+                {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
+              </Text>
+              <View style={styles.horizontalTimeRow}>
+                {renderHorizontalTimePicker(wakeHour, setWakeHour, 'hour')}
+                <Text style={styles.timeSeparator}>:</Text>
+                {renderHorizontalTimePicker(wakeMinute, setWakeMinute, 'minute')}
               </View>
+            </View>
 
-              <View style={styles.timeSection}>
-                <Text style={styles.timeLabel}>
-                  {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
-                </Text>
-                <View style={styles.timePickerRow}>
-                  {renderTimeScrollPicker(sleepHour, setSleepHour, 0, 23)}
-                  {renderTimeScrollPicker(sleepMinute, setSleepMinute, 0, 59)}
-                </View>
+            <View style={styles.timeSection}>
+              <Text style={styles.timeLabel}>
+                {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
+              </Text>
+              <View style={styles.horizontalTimeRow}>
+                {renderHorizontalTimePicker(sleepHour, setSleepHour, 'hour')}
+                <Text style={styles.timeSeparator}>:</Text>
+                {renderHorizontalTimePicker(sleepMinute, setSleepMinute, 'minute')}
               </View>
             </View>
 
@@ -428,6 +471,8 @@ export default function HomeScreen() {
             <ScrollView style={styles.alarmsList} showsVerticalScrollIndicator={false}>
               {alarms.map((alarm, index) => {
                 const isChecked = checkedAlarms.has(index);
+                const isNextAlarm = index === nextAlarmIndex;
+                const timeUntil = calculateTimeUntilAlarm(alarm);
 
                 return (
                   <TouchableOpacity
@@ -435,15 +480,24 @@ export default function HomeScreen() {
                     style={[
                       styles.alarmItem,
                       isChecked && styles.alarmItemChecked,
+                      isNextAlarm && styles.alarmItemNext,
                     ]}
                     onPress={() => handleAlarmPress(index)}
                   >
-                    <Text style={[
-                      styles.alarmTime,
-                      isChecked && styles.alarmTimeChecked,
-                    ]}>
-                      {alarm}
-                    </Text>
+                    <View style={styles.alarmLeftSection}>
+                      <Text style={[
+                        styles.alarmTime,
+                        isChecked && styles.alarmTimeChecked,
+                      ]}>
+                        {alarm}
+                      </Text>
+                      <Text style={[
+                        styles.alarmTimeUntil,
+                        isChecked && styles.alarmTimeUntilChecked,
+                      ]}>
+                        {timeUntil}
+                      </Text>
+                    </View>
                     <View style={[
                       styles.alarmCheckbox,
                       isChecked && styles.alarmCheckboxChecked,
@@ -461,15 +515,6 @@ export default function HomeScreen() {
                 );
               })}
             </ScrollView>
-
-            {checkedCount > 0 && (
-              <View style={styles.checkedCountCard}>
-                <Text style={styles.checkedCountLabel}>
-                  {isGerman ? 'Anzahl Zigaretten' : 'Cigarette Count'}
-                </Text>
-                <Text style={styles.checkedCountValue}>{checkedCount}</Text>
-              </View>
-            )}
           </View>
         )}
       </ScrollView>
@@ -503,12 +548,13 @@ const styles = StyleSheet.create({
   },
   dayButton: {
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
     borderRadius: 16,
-    minWidth: 62,
-    aspectRatio: 1,
+    minWidth: 64,
+    minHeight: 90,
     backgroundColor: '#2A2A2A',
+    justifyContent: 'center',
   },
   dayButtonActive: {
     backgroundColor: colors.primary,
@@ -517,16 +563,16 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   dayNumber: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900',
     color: colors.text,
-    marginBottom: 2,
+    marginBottom: 6,
   },
   dayNumberActive: {
     color: '#000000',
   },
   dayName: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
     color: colors.textSecondary,
   },
@@ -540,9 +586,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   countValue: {
-    fontSize: 32,
+    fontSize: 48,
     fontWeight: 'bold',
-    color: colors.text,
+    color: colors.primary,
     marginBottom: 6,
   },
   countLabel: {
@@ -570,15 +616,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
   },
-  timeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 12,
-  },
   timeSection: {
-    flex: 1,
     alignItems: 'center',
+    marginBottom: 20,
   },
   timeLabel: {
     fontSize: 9,
@@ -587,10 +627,46 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 12,
   },
-  timePickerRow: {
+  horizontalTimeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  timeSeparator: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginHorizontal: 4,
+  },
+  horizontalTimePickerScroll: {
+    height: 70,
+    maxWidth: 140,
+  },
+  horizontalTimePickerContent: {
+    paddingHorizontal: 10,
+    alignItems: 'center',
+  },
+  horizontalTimePickerItem: {
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+  },
+  horizontalTimePickerItemActive: {
+    backgroundColor: colors.primary,
+  },
+  horizontalTimePickerItemText: {
+    fontSize: 24,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  horizontalTimePickerItemTextActive: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#000000',
   },
   goalSection: {
     alignItems: 'center',
@@ -602,36 +678,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: 16,
-  },
-  pickerColumn: {
-    alignItems: 'center',
-  },
-  pickerScroll: {
-    height: 100,
-    width: 60,
-  },
-  pickerContent: {
-    paddingVertical: 25,
-  },
-  pickerItem: {
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    marginVertical: 2,
-  },
-  pickerItemActive: {
-    backgroundColor: colors.primary,
-  },
-  pickerItemText: {
-    fontSize: 18,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  pickerItemTextActive: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000000',
   },
   horizontalPickerScroll: {
     height: 70,
@@ -706,9 +752,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
+    borderWidth: 2,
+    borderColor: 'transparent',
   },
   alarmItemChecked: {
     backgroundColor: colors.primary,
+  },
+  alarmItemNext: {
+    borderColor: colors.primary,
+    borderWidth: 3,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  alarmLeftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   alarmTime: {
     fontSize: 22,
@@ -717,6 +779,15 @@ const styles = StyleSheet.create({
   },
   alarmTimeChecked: {
     color: '#000000',
+  },
+  alarmTimeUntil: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  alarmTimeUntilChecked: {
+    color: '#000000',
+    opacity: 0.7,
   },
   alarmCheckbox: {
     width: 32,
@@ -731,22 +802,5 @@ const styles = StyleSheet.create({
   alarmCheckboxChecked: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
-  },
-  checkedCountCard: {
-    marginTop: 16,
-    padding: 16,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  checkedCountLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
-  },
-  checkedCountValue: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: colors.primary,
   },
 });

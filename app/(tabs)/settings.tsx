@@ -91,55 +91,58 @@ export default function SettingsScreen() {
     router.replace('/');
   };
 
-  const renderTimeScrollPicker = (
+  const renderHorizontalTimePicker = (
     value: number,
     onChange: (val: number) => void,
-    min: number,
-    max: number
+    type: 'hour' | 'minute'
   ) => {
-    const items = [];
-    for (let i = min; i <= max; i++) {
-      items.push(i);
+    let items: number[] = [];
+    
+    if (type === 'hour') {
+      for (let i = 0; i <= 23; i++) {
+        items.push(i);
+      }
+    } else {
+      items = [0, 15, 30, 45];
     }
     
     return (
-      <View style={styles.pickerColumn}>
-        <ScrollView
-          style={styles.pickerScroll}
-          contentContainerStyle={styles.pickerContent}
-          showsVerticalScrollIndicator={false}
-          snapToInterval={50}
-          decelerationRate="fast"
-          onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-          scrollEventThrottle={100}
-        >
-          {items.map((item) => {
-            const isSelected = value === item;
-            return (
-              <TouchableOpacity
-                key={item}
+      <ScrollView
+        horizontal
+        style={styles.horizontalTimePickerScroll}
+        contentContainerStyle={styles.horizontalTimePickerContent}
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={70}
+        decelerationRate="fast"
+        onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        scrollEventThrottle={100}
+      >
+        {items.map((item) => {
+          const isSelected = value === item;
+          return (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.horizontalTimePickerItem,
+                isSelected && styles.horizontalTimePickerItemActive,
+              ]}
+              onPress={() => {
+                onChange(item);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              }}
+            >
+              <Text
                 style={[
-                  styles.pickerItem,
-                  isSelected && styles.pickerItemActive,
+                  styles.horizontalTimePickerItemText,
+                  isSelected && styles.horizontalTimePickerItemTextActive,
                 ]}
-                onPress={() => {
-                  onChange(item);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                }}
               >
-                <Text
-                  style={[
-                    styles.pickerItemText,
-                    isSelected && styles.pickerItemTextActive,
-                  ]}
-                >
-                  {item.toString().padStart(2, '0')}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
+                {item.toString().padStart(2, '0')}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     );
   };
 
@@ -238,21 +241,21 @@ export default function SettingsScreen() {
             <Text style={styles.setupTitle}>{morningSetupText}</Text>
           </View>
 
-          <View style={styles.timeRow}>
-            <View style={styles.timeSection}>
-              <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
-              <View style={styles.timePickerRow}>
-                {renderTimeScrollPicker(wakeHour, setWakeHour, 0, 23)}
-                {renderTimeScrollPicker(wakeMinute, setWakeMinute, 0, 59)}
-              </View>
+          <View style={styles.timeSection}>
+            <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
+            <View style={styles.horizontalTimeRow}>
+              {renderHorizontalTimePicker(wakeHour, setWakeHour, 'hour')}
+              <Text style={styles.timeSeparator}>:</Text>
+              {renderHorizontalTimePicker(wakeMinute, setWakeMinute, 'minute')}
             </View>
+          </View>
 
-            <View style={styles.timeSection}>
-              <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
-              <View style={styles.timePickerRow}>
-                {renderTimeScrollPicker(sleepHour, setSleepHour, 0, 23)}
-                {renderTimeScrollPicker(sleepMinute, setSleepMinute, 0, 59)}
-              </View>
+          <View style={styles.timeSection}>
+            <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
+            <View style={styles.horizontalTimeRow}>
+              {renderHorizontalTimePicker(sleepHour, setSleepHour, 'hour')}
+              <Text style={styles.timeSeparator}>:</Text>
+              {renderHorizontalTimePicker(sleepMinute, setSleepMinute, 'minute')}
             </View>
           </View>
 
@@ -495,15 +498,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.text,
   },
-  timeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 12,
-  },
   timeSection: {
-    flex: 1,
     alignItems: 'center',
+    marginBottom: 20,
   },
   timeLabel: {
     fontSize: 9,
@@ -512,10 +509,46 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 12,
   },
-  timePickerRow: {
+  horizontalTimeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  timeSeparator: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginHorizontal: 4,
+  },
+  horizontalTimePickerScroll: {
+    height: 70,
+    maxWidth: 140,
+  },
+  horizontalTimePickerContent: {
+    paddingHorizontal: 10,
+    alignItems: 'center',
+  },
+  horizontalTimePickerItem: {
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
+    borderRadius: 16,
+    backgroundColor: 'transparent',
+  },
+  horizontalTimePickerItemActive: {
+    backgroundColor: colors.primary,
+  },
+  horizontalTimePickerItemText: {
+    fontSize: 24,
+    color: colors.textSecondary,
+    fontWeight: '600',
+  },
+  horizontalTimePickerItemTextActive: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#000000',
   },
   goalSection: {
     alignItems: 'center',
@@ -527,36 +560,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: 16,
-  },
-  pickerColumn: {
-    alignItems: 'center',
-  },
-  pickerScroll: {
-    height: 100,
-    width: 60,
-  },
-  pickerContent: {
-    paddingVertical: 25,
-  },
-  pickerItem: {
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    marginVertical: 2,
-  },
-  pickerItemActive: {
-    backgroundColor: colors.primary,
-  },
-  pickerItemText: {
-    fontSize: 18,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  pickerItemTextActive: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000000',
   },
   horizontalPickerScroll: {
     height: 70,

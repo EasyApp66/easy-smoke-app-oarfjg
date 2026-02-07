@@ -1,14 +1,15 @@
+
 {
   "expo": {
     "name": "Easy Smoke",
     "slug": "Easy Smoke",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/b6ecf0b7-514c-4084-a905-aca5eccff142.png",
+    "icon": "./assets/images/fec24b4c-1505-4d2d-ad8a-723f4d69c22a.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/b6ecf0b7-514c-4084-a905-aca5eccff142.png",
+      "image": "./assets/images/fec24b4c-1505-4d2d-ad8a-723f4d69c22a.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
@@ -21,14 +22,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/b6ecf0b7-514c-4084-a905-aca5eccff142.png",
+        "foregroundImage": "./assets/images/fec24b4c-1505-4d2d-ad8a-723f4d69c22a.png",
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.ivanm66.easysmoke5"
     },
     "web": {
-      "favicon": "./assets/images/b6ecf0b7-514c-4084-a905-aca5eccff142.png",
+      "favicon": "./assets/images/fec24b4c-1505-4d2d-ad8a-723f4d69c22a.png",
       "bundler": "metro"
     },
     "plugins": [
