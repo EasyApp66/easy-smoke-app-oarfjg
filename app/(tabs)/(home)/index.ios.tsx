@@ -7,6 +7,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
+  FlatList,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { colors } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
@@ -204,103 +207,160 @@ export default function HomeScreen() {
     });
   };
 
-  const renderVerticalTimePicker = (
-    value: number,
-    onChange: (val: number) => void,
-    type: 'hour' | 'minute'
+  const renderCompactTimePicker = (
+    hourValue: number,
+    minuteValue: number,
+    onHourChange: (val: number) => void,
+    onMinuteChange: (val: number) => void
   ) => {
-    let items: number[] = [];
+    const hours = Array.from({ length: 24 }, (_, i) => i);
+    const minutes = [0, 15, 30, 45];
     
-    if (type === 'hour') {
-      for (let i = 0; i <= 23; i++) {
-        items.push(i);
+    const ITEM_WIDTH = 80;
+    const ITEM_HEIGHT = 60;
+
+    const handleHourScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / ITEM_WIDTH);
+      if (index >= 0 && index < hours.length && hours[index] !== hourValue) {
+        onHourChange(hours[index]);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
-    } else {
-      items = [0, 15, 30, 45];
-    }
-    
+    };
+
+    const handleMinuteScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / ITEM_WIDTH);
+      if (index >= 0 && index < minutes.length && minutes[index] !== minuteValue) {
+        onMinuteChange(minutes[index]);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    };
+
     return (
-      <ScrollView
-        style={styles.verticalTimePickerScroll}
-        contentContainerStyle={styles.verticalTimePickerContent}
-        showsVerticalScrollIndicator={false}
-        snapToInterval={70}
-        decelerationRate="fast"
-        onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-        scrollEventThrottle={100}
-      >
-        {items.map((item) => {
-          const isSelected = value === item;
-          return (
-            <TouchableOpacity
-              key={item}
-              style={[
-                styles.verticalTimePickerItem,
-                isSelected && styles.verticalTimePickerItemActive,
-              ]}
-              onPress={() => {
-                onChange(item);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              }}
-            >
-              <Text
-                style={[
-                  styles.verticalTimePickerItemText,
-                  isSelected && styles.verticalTimePickerItemTextActive,
-                ]}
-              >
-                {item.toString().padStart(2, '0')}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.compactTimePickerContainer}>
+        <View style={styles.compactTimeDisplay}>
+          <Text style={styles.compactTimeText}>
+            {hourValue.toString().padStart(2, '0')}
+          </Text>
+          <Text style={styles.compactTimeSeparator}>:</Text>
+          <Text style={styles.compactTimeText}>
+            {minuteValue.toString().padStart(2, '0')}
+          </Text>
+        </View>
+        
+        <View style={styles.hiddenPickersContainer}>
+          <FlatList
+            horizontal
+            data={hours}
+            keyExtractor={(item) => `hour-${item}`}
+            renderItem={({ item }) => (
+              <View style={[styles.hiddenPickerItem, { width: ITEM_WIDTH, height: ITEM_HEIGHT }]}>
+                <Text style={styles.hiddenPickerText}>{item.toString().padStart(2, '0')}</Text>
+              </View>
+            )}
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={ITEM_WIDTH}
+            decelerationRate="fast"
+            onMomentumScrollEnd={handleHourScroll}
+            getItemLayout={(data, index) => ({
+              length: ITEM_WIDTH,
+              offset: ITEM_WIDTH * index,
+              index,
+            })}
+            initialScrollIndex={hourValue}
+            contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
+          />
+          
+          <FlatList
+            horizontal
+            data={minutes}
+            keyExtractor={(item) => `minute-${item}`}
+            renderItem={({ item }) => (
+              <View style={[styles.hiddenPickerItem, { width: ITEM_WIDTH, height: ITEM_HEIGHT }]}>
+                <Text style={styles.hiddenPickerText}>{item.toString().padStart(2, '0')}</Text>
+              </View>
+            )}
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={ITEM_WIDTH}
+            decelerationRate="fast"
+            onMomentumScrollEnd={handleMinuteScroll}
+            getItemLayout={(data, index) => ({
+              length: ITEM_WIDTH,
+              offset: ITEM_WIDTH * index,
+              index,
+            })}
+            initialScrollIndex={minutes.indexOf(minuteValue)}
+            contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
+          />
+        </View>
+      </View>
     );
   };
 
-  const renderHorizontalCigarettePicker = () => {
-    const items = [];
-    for (let i = 1; i <= 50; i++) {
-      items.push(i);
-    }
-    
+  const renderCompactCigarettePicker = () => {
+    const items = Array.from({ length: 50 }, (_, i) => i + 1);
+    const ITEM_WIDTH = 100;
+    const ITEM_HEIGHT = 80;
+
+    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / ITEM_WIDTH);
+      if (index >= 0 && index < items.length && items[index] !== cigaretteGoal) {
+        setCigaretteGoal(items[index]);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    };
+
+    const renderItem = ({ item, index }: { item: number; index: number }) => {
+      const currentIndex = cigaretteGoal - 1;
+      const distance = Math.abs(index - currentIndex);
+      
+      const isSelected = distance === 0;
+      const isAdjacent = distance === 1;
+      const isVisible = distance <= 1;
+
+      if (!isVisible) {
+        return <View style={[styles.cigarettePickerItem, { width: ITEM_WIDTH, opacity: 0 }]} />;
+      }
+
+      return (
+        <View style={[
+          styles.cigarettePickerItem,
+          { width: ITEM_WIDTH },
+          isSelected && styles.cigarettePickerItemSelected,
+        ]}>
+          <Text style={[
+            styles.cigarettePickerText,
+            isSelected && styles.cigarettePickerTextSelected,
+            isAdjacent && styles.cigarettePickerTextAdjacent,
+          ]}>
+            {item}
+          </Text>
+        </View>
+      );
+    };
+
     return (
-      <ScrollView
-        horizontal
-        style={styles.horizontalPickerScroll}
-        contentContainerStyle={styles.horizontalPickerContent}
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={80}
-        decelerationRate="fast"
-        onScroll={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-        scrollEventThrottle={100}
-      >
-        {items.map((item) => {
-          const isSelected = cigaretteGoal === item;
-          return (
-            <TouchableOpacity
-              key={item}
-              style={[
-                styles.horizontalPickerItem,
-                isSelected && styles.horizontalPickerItemActive,
-              ]}
-              onPress={() => {
-                setCigaretteGoal(item);
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              }}
-            >
-              <Text
-                style={[
-                  styles.horizontalPickerItemText,
-                  isSelected && styles.horizontalPickerItemTextActive,
-                ]}
-              >
-                {item}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.compactCigarettePickerContainer}>
+        <FlatList
+          horizontal
+          data={items}
+          keyExtractor={(item) => `cig-${item}`}
+          renderItem={renderItem}
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={ITEM_WIDTH}
+          decelerationRate="fast"
+          onMomentumScrollEnd={handleScroll}
+          getItemLayout={(data, index) => ({
+            length: ITEM_WIDTH,
+            offset: ITEM_WIDTH * index,
+            index,
+          })}
+          initialScrollIndex={cigaretteGoal - 1}
+          contentContainerStyle={{ paddingHorizontal: (300 - ITEM_WIDTH) / 2 }}
+        />
+      </View>
     );
   };
 
@@ -411,22 +471,14 @@ export default function HomeScreen() {
                 <Text style={styles.timeLabel}>
                   {isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME'}
                 </Text>
-                <View style={styles.verticalTimeRow}>
-                  {renderVerticalTimePicker(sleepHour, setSleepHour, 'hour')}
-                  <Text style={styles.timeSeparatorVertical}>:</Text>
-                  {renderVerticalTimePicker(sleepMinute, setSleepMinute, 'minute')}
-                </View>
+                {renderCompactTimePicker(sleepHour, sleepMinute, setSleepHour, setSleepMinute)}
               </View>
 
               <View style={styles.timePickerColumn}>
                 <Text style={styles.timeLabel}>
                   {isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME'}
                 </Text>
-                <View style={styles.verticalTimeRow}>
-                  {renderVerticalTimePicker(wakeHour, setWakeHour, 'hour')}
-                  <Text style={styles.timeSeparatorVertical}>:</Text>
-                  {renderVerticalTimePicker(wakeMinute, setWakeMinute, 'minute')}
-                </View>
+                {renderCompactTimePicker(wakeHour, wakeMinute, setWakeHour, setWakeMinute)}
               </View>
             </View>
 
@@ -434,7 +486,7 @@ export default function HomeScreen() {
               <Text style={styles.goalLabel}>
                 {isGerman ? 'TÄGLICHE ZIGARETTEN' : 'DAILY CIGARETTES'}
               </Text>
-              {renderHorizontalCigarettePicker()}
+              {renderCompactCigarettePicker()}
             </View>
 
             <TouchableOpacity
@@ -634,46 +686,46 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 12,
   },
-  verticalTimeRow: {
+  compactTimePickerContainer: {
+    alignItems: 'center',
+    height: 80,
+    overflow: 'hidden',
+  },
+  compactTimeDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  timeSeparatorVertical: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: colors.text,
-    marginHorizontal: 2,
-  },
-  verticalTimePickerScroll: {
-    height: 200,
-    width: 60,
-  },
-  verticalTimePickerContent: {
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  verticalTimePickerItem: {
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 5,
-    borderRadius: 16,
-    backgroundColor: 'transparent',
-  },
-  verticalTimePickerItemActive: {
     backgroundColor: colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 16,
+    zIndex: 10,
   },
-  verticalTimePickerItemText: {
-    fontSize: 24,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  verticalTimePickerItemTextActive: {
-    fontSize: 36,
+  compactTimeText: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#000000',
+  },
+  compactTimeSeparator: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginHorizontal: 4,
+  },
+  hiddenPickersContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    opacity: 0,
+    height: 80,
+  },
+  hiddenPickerItem: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  hiddenPickerText: {
+    fontSize: 24,
+    color: colors.text,
   },
   goalSection: {
     alignItems: 'center',
@@ -686,34 +738,33 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: 16,
   },
-  horizontalPickerScroll: {
-    height: 70,
-  },
-  horizontalPickerContent: {
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  horizontalPickerItem: {
-    width: 70,
-    height: 60,
+  compactCigarettePickerContainer: {
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 5,
-    borderRadius: 16,
-    backgroundColor: 'transparent',
   },
-  horizontalPickerItemActive: {
+  cigarettePickerItem: {
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 16,
+  },
+  cigarettePickerItemSelected: {
     backgroundColor: colors.primary,
   },
-  horizontalPickerItemText: {
-    fontSize: 22,
-    color: colors.textSecondary,
+  cigarettePickerText: {
+    fontSize: 24,
     fontWeight: '600',
+    color: colors.textSecondary,
   },
-  horizontalPickerItemTextActive: {
+  cigarettePickerTextSelected: {
     fontSize: 42,
     fontWeight: 'bold',
     color: '#000000',
+  },
+  cigarettePickerTextAdjacent: {
+    fontSize: 28,
+    color: colors.text,
   },
   setupButton: {
     backgroundColor: colors.primary,
