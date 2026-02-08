@@ -1,9 +1,17 @@
 
 import { StyleSheet } from 'react-native';
 
+// Accent color mapping
+export const accentColors = {
+  green: '#10B981',
+  neonYellow: '#FFFF00',
+  neonGreen: '#39FF14',
+  lightBlue: '#00D9FF',
+};
+
 // Color scheme for easy Smoke app
 export const colors = {
-  // Primary brand color - green
+  // Primary brand color - green (default, can be overridden by accent color)
   primary: '#10B981', // Emerald green
   primaryDark: '#059669',
   primaryLight: '#34D399',
@@ -97,3 +105,8 @@ export const commonStyles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+// Helper function to get the current accent color
+export function getAccentColor(accentColorKey: 'green' | 'neonYellow' | 'neonGreen' | 'lightBlue' = 'green'): string {
+  return accentColors[accentColorKey] || accentColors.green;
+}

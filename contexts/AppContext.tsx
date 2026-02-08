@@ -11,6 +11,7 @@ interface AppSettings {
   dailyCigaretteGoal: number;
   language: 'de' | 'en';
   backgroundColor: 'gray' | 'black';
+  accentColor: 'green' | 'neonYellow' | 'neonGreen' | 'lightBlue';
   premiumEnabled: boolean;
   premiumType?: 'monthly' | 'lifetime';
   premiumExpiry?: string;
@@ -97,7 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const storedSettings = await storage.getItem('appSettings');
       if (storedSettings) {
         const parsed = JSON.parse(storedSettings);
-        setSettings({ ...parsed, deviceId });
+        setSettings({ ...parsed, deviceId, accentColor: parsed.accentColor || 'green' });
       }
 
       // Fetch settings from server to sync
@@ -113,6 +114,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             dailyCigaretteGoal: serverSettings.dailyCigaretteGoal,
             language: serverSettings.language as 'de' | 'en',
             backgroundColor: serverSettings.backgroundColor as 'gray' | 'black',
+            accentColor: (serverSettings.accentColor as 'green' | 'neonYellow' | 'neonGreen' | 'lightBlue') || 'green',
             premiumEnabled: serverSettings.premiumEnabled,
             premiumType: serverSettings.premiumType as 'monthly' | 'lifetime' | undefined,
             premiumExpiry: serverSettings.premiumExpiry,
@@ -173,6 +175,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         dailyCigaretteGoal: 25,
         language: 'de' as 'de' | 'en',
         backgroundColor: 'gray' as 'gray' | 'black',
+        accentColor: 'green' as 'green' | 'neonYellow' | 'neonGreen' | 'lightBlue',
         premiumEnabled: false,
       };
       

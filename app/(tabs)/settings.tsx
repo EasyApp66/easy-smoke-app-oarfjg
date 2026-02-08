@@ -13,7 +13,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { colors } from '@/styles/commonStyles';
+import { colors, accentColors, getAccentColor } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
 import { IconSymbol } from '@/components/IconSymbol';
 import { LegalModal } from '@/components/LegalModal';
@@ -27,11 +27,13 @@ function VerticalTimePicker({
   minuteValue,
   onHourChange,
   onMinuteChange,
+  accentColor,
 }: {
   hourValue: number;
   minuteValue: number;
   onHourChange: (val: number) => void;
   onMinuteChange: (val: number) => void;
+  accentColor: string;
 }) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = [0, 15, 30, 45];
@@ -139,7 +141,7 @@ function VerticalTimePicker({
         </View>
       </View>
       
-      <View style={styles.verticalGreenLens} pointerEvents="none" />
+      <View style={[styles.verticalGreenLens, { backgroundColor: accentColor }]} pointerEvents="none" />
     </View>
   );
 }
@@ -148,9 +150,11 @@ function VerticalTimePicker({
 function HorizontalCigarettePicker({
   value,
   onValueChange,
+  accentColor,
 }: {
   value: number;
   onValueChange: (val: number) => void;
+  accentColor: string;
 }) {
   const items = Array.from({ length: 50 }, (_, i) => i + 1);
   const ITEM_WIDTH = 80;
@@ -205,7 +209,7 @@ function HorizontalCigarettePicker({
         })}
       </ScrollView>
       
-      <View style={styles.horizontalGreenLens} pointerEvents="none" />
+      <View style={[styles.horizontalGreenLens, { backgroundColor: accentColor }]} pointerEvents="none" />
     </View>
   );
 }
@@ -238,10 +242,29 @@ export default function SettingsScreen() {
     }
   }, [settings]);
 
+  const currentAccentColor = getAccentColor(settings?.accentColor || 'green');
+
   const handleBackgroundChange = async (color: 'gray' | 'black') => {
+    if (!settings?.premiumEnabled) {
+      setToastMessage(isGerman ? 'Premium erforderlich' : 'Premium required');
+      setToastType('error');
+      setToastVisible(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    
     console.log('User changed background color to:', color);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await updateSettings({ backgroundColor: color });
+  };
+
+  const handleAccentColorChange = async (color: 'green' | 'neonYellow' | 'neonGreen' | 'lightBlue') => {
+    console.log('User changed accent color to:', color);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await updateSettings({ accentColor: color });
+    setToastMessage(isGerman ? 'Akzentfarbe geändert' : 'Accent color changed');
+    setToastType('success');
+    setToastVisible(true);
   };
 
   const handleLanguageChange = async (lang: 'de' | 'en') => {
@@ -293,6 +316,7 @@ export default function SettingsScreen() {
   const applyAllDaysText = isGerman ? 'Änderungen auf alle Tage\nanwenden' : 'Apply changes to all days';
   const appearanceText = isGerman ? 'DARSTELLUNG' : 'APPEARANCE';
   const backgroundColorText = isGerman ? 'Hintergrundfarbe' : 'Background Color';
+  const accentColorText = isGerman ? 'Akzentfarbe' : 'Accent Color';
   const blackText = isGerman ? 'Schwarz' : 'Black';
   const grayText = isGerman ? 'Grau' : 'Gray';
   const languageText = isGerman ? 'SPRACHE' : 'LANGUAGE';
@@ -304,8 +328,12 @@ export default function SettingsScreen() {
   const enterCodeText = isGerman ? 'Code eingeben' : 'Enter code';
   const applyText = isGerman ? 'Anwenden' : 'Apply';
   const premiumTitle = isGerman ? 'Premium Holen' : 'Get Premium';
+  const premiumBenefitsText = isGerman 
+    ? 'Mit Premium hast du volle Statistik Übersicht, Zigaretten Plan für weitere Tage einstellen, alle App Einstellungen.' 
+    : 'With Premium you have full statistics overview, cigarette plan for more days, all app settings.';
   const oneTimeText = isGerman ? 'Einmalige Zahlung' : 'One-time Payment';
   const monthlyText = isGerman ? 'Monatlich' : 'Monthly';
+  const premiumRequiredText = isGerman ? '(Premium)' : '(Premium)';
 
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
@@ -323,7 +351,7 @@ export default function SettingsScreen() {
               ios_icon_name="calendar"
               android_material_icon_name="calendar-today"
               size={18}
-              color={colors.primary}
+              color={currentAccentColor}
             />
             <Text style={styles.setupTitle}>{morningSetupText}</Text>
           </View>
@@ -336,6 +364,7 @@ export default function SettingsScreen() {
                 minuteValue={wakeMinute}
                 onHourChange={setWakeHour}
                 onMinuteChange={setWakeMinute}
+                accentColor={currentAccentColor}
               />
             </View>
 
@@ -346,6 +375,7 @@ export default function SettingsScreen() {
                 minuteValue={sleepMinute}
                 onHourChange={setSleepHour}
                 onMinuteChange={setSleepMinute}
+                accentColor={currentAccentColor}
               />
             </View>
           </View>
@@ -355,6 +385,7 @@ export default function SettingsScreen() {
             <HorizontalCigarettePicker
               value={cigaretteGoal}
               onValueChange={setCigaretteGoal}
+              accentColor={currentAccentColor}
             />
           </View>
         </View>
@@ -370,26 +401,28 @@ export default function SettingsScreen() {
               setApplyToAllDays(value);
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             }}
-            trackColor={{ false: colors.border, true: colors.primary }}
+            trackColor={{ false: colors.border, true: currentAccentColor }}
             thumbColor={colors.text}
           />
         </View>
 
         <Text style={styles.sectionLabel}>{premiumTitle}</Text>
         <View style={[styles.premiumCard, { backgroundColor: cardColor }]}>
+          <Text style={styles.premiumBenefitsText}>{premiumBenefitsText}</Text>
+          
           <TouchableOpacity
             style={styles.premiumOption}
             onPress={() => handlePremiumPurchase('onetime')}
           >
             <View>
               <Text style={styles.premiumOptionTitle}>{oneTimeText}</Text>
-              <Text style={styles.premiumPrice}>10 CHF</Text>
+              <Text style={[styles.premiumPrice, { color: currentAccentColor }]}>10 CHF</Text>
             </View>
             <IconSymbol
               ios_icon_name="chevron.right"
               android_material_icon_name="chevron-right"
               size={24}
-              color={colors.primary}
+              color={currentAccentColor}
             />
           </TouchableOpacity>
           
@@ -401,25 +434,31 @@ export default function SettingsScreen() {
           >
             <View>
               <Text style={styles.premiumOptionTitle}>{monthlyText}</Text>
-              <Text style={styles.premiumPrice}>1 CHF / {isGerman ? 'Monat' : 'Month'}</Text>
+              <Text style={[styles.premiumPrice, { color: currentAccentColor }]}>1 CHF / {isGerman ? 'Monat' : 'Month'}</Text>
             </View>
             <IconSymbol
               ios_icon_name="chevron.right"
               android_material_icon_name="chevron-right"
               size={24}
-              color={colors.primary}
+              color={currentAccentColor}
             />
           </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionLabel}>{appearanceText}</Text>
         <View style={[styles.card, { backgroundColor: cardColor }]}>
-          <Text style={styles.cardTitle}>{backgroundColorText}</Text>
+          <View style={styles.settingRowInCard}>
+            <Text style={styles.cardTitle}>{backgroundColorText}</Text>
+            {!settings?.premiumEnabled && (
+              <Text style={[styles.premiumBadge, { color: currentAccentColor }]}>{premiumRequiredText}</Text>
+            )}
+          </View>
           <View style={styles.colorButtons}>
             <TouchableOpacity
               style={[
                 styles.colorButton,
                 settings?.backgroundColor === 'black' && styles.colorButtonActive,
+                settings?.backgroundColor === 'black' && { borderColor: currentAccentColor },
               ]}
               onPress={() => handleBackgroundChange('black')}
             >
@@ -429,11 +468,95 @@ export default function SettingsScreen() {
               style={[
                 styles.colorButton,
                 settings?.backgroundColor === 'gray' && styles.colorButtonActive,
+                settings?.backgroundColor === 'gray' && { borderColor: currentAccentColor },
               ]}
               onPress={() => handleBackgroundChange('gray')}
             >
               <Text style={styles.colorButtonText}>{grayText}</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={[styles.card, { backgroundColor: cardColor }]}>
+          <Text style={styles.cardTitle}>{accentColorText}</Text>
+          <View style={styles.accentColorGrid}>
+            <TouchableOpacity
+              style={[
+                styles.accentColorButton,
+                { backgroundColor: accentColors.green },
+                settings?.accentColor === 'green' && styles.accentColorButtonActive,
+              ]}
+              onPress={() => handleAccentColorChange('green')}
+            >
+              {settings?.accentColor === 'green' && (
+                <IconSymbol
+                  ios_icon_name="checkmark"
+                  android_material_icon_name="check"
+                  size={24}
+                  color="#000000"
+                />
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.accentColorButton,
+                { backgroundColor: accentColors.neonYellow },
+                settings?.accentColor === 'neonYellow' && styles.accentColorButtonActive,
+              ]}
+              onPress={() => handleAccentColorChange('neonYellow')}
+            >
+              {settings?.accentColor === 'neonYellow' && (
+                <IconSymbol
+                  ios_icon_name="checkmark"
+                  android_material_icon_name="check"
+                  size={24}
+                  color="#000000"
+                />
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.accentColorButton,
+                { backgroundColor: accentColors.neonGreen },
+                settings?.accentColor === 'neonGreen' && styles.accentColorButtonActive,
+              ]}
+              onPress={() => handleAccentColorChange('neonGreen')}
+            >
+              {settings?.accentColor === 'neonGreen' && (
+                <IconSymbol
+                  ios_icon_name="checkmark"
+                  android_material_icon_name="check"
+                  size={24}
+                  color="#000000"
+                />
+              )}
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.accentColorButton,
+                { backgroundColor: accentColors.lightBlue },
+                settings?.accentColor === 'lightBlue' && styles.accentColorButtonActive,
+              ]}
+              onPress={() => handleAccentColorChange('lightBlue')}
+            >
+              {settings?.accentColor === 'lightBlue' && (
+                <IconSymbol
+                  ios_icon_name="checkmark"
+                  android_material_icon_name="check"
+                  size={24}
+                  color="#000000"
+                />
+              )}
+            </TouchableOpacity>
+          </View>
+          <View style={styles.accentColorLabels}>
+            <Text style={styles.accentColorLabel}>{isGerman ? 'Grün' : 'Green'}</Text>
+            <Text style={styles.accentColorLabel}>{isGerman ? 'Neon Gelb' : 'Neon Yellow'}</Text>
+            <Text style={styles.accentColorLabel}>{isGerman ? 'Neon Grün' : 'Neon Green'}</Text>
+            <Text style={styles.accentColorLabel}>{isGerman ? 'Hellblau' : 'Light Blue'}</Text>
           </View>
         </View>
 
@@ -447,13 +570,13 @@ export default function SettingsScreen() {
               ios_icon_name="globe"
               android_material_icon_name="language"
               size={24}
-              color={colors.primary}
+              color={currentAccentColor}
             />
             <Text style={styles.settingTitle}>
               {isGerman ? germanText : englishText}
             </Text>
           </View>
-          <Text style={styles.activeText}>{activeText}</Text>
+          <Text style={[styles.activeText, { color: currentAccentColor }]}>{activeText}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -520,7 +643,7 @@ export default function SettingsScreen() {
                 autoCapitalize="characters"
               />
               <TouchableOpacity
-                style={styles.promoButton}
+                style={[styles.promoButton, { backgroundColor: currentAccentColor }]}
                 onPress={handlePromoCodeSubmit}
               >
                 <Text style={styles.promoButtonText}>{applyText}</Text>
@@ -632,7 +755,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 50,
-    backgroundColor: colors.primary,
     borderRadius: 16,
     opacity: 0.25,
   },
@@ -675,7 +797,6 @@ const styles = StyleSheet.create({
     left: '50%',
     transform: [{ translateX: -40 }],
     width: 80,
-    backgroundColor: colors.primary,
     borderRadius: 16,
     opacity: 0.25,
   },
@@ -688,6 +809,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+  },
+  settingRowInCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  premiumBadge: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   sectionLabel: {
     fontSize: 11,
@@ -723,7 +854,6 @@ const styles = StyleSheet.create({
   },
   activeText: {
     fontSize: 14,
-    color: colors.primary,
     fontWeight: '600',
   },
   colorButtons: {
@@ -741,16 +871,50 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   colorButtonActive: {
-    borderColor: colors.primary,
+    borderWidth: 2,
   },
   colorButtonText: {
     fontSize: 15,
     fontWeight: '600',
     color: colors.text,
   },
+  accentColorGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  accentColorButton: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'transparent',
+  },
+  accentColorButtonActive: {
+    borderColor: '#FFFFFF',
+  },
+  accentColorLabels: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  accentColorLabel: {
+    flex: 1,
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   premiumCard: {
     borderRadius: 16,
     padding: 16,
+    marginBottom: 16,
+  },
+  premiumBenefitsText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 20,
     marginBottom: 16,
   },
   premiumOption: {
@@ -768,7 +932,6 @@ const styles = StyleSheet.create({
   premiumPrice: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: colors.primary,
   },
   premiumDivider: {
     height: 1,
@@ -806,7 +969,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   promoButton: {
-    backgroundColor: colors.primary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
