@@ -42,7 +42,7 @@ export default function WelcomeScreen() {
   const goButtonText = 'GO';
   const legalText = 'Rechtliches';
 
-  const backgroundImage = require('@/assets/images/2713f956-871f-47e1-bc3d-fe31d50d0f0d.png');
+  const backgroundImage = require('@/assets/images/3fdaf853-7a97-43c8-9a56-4ef256cf6fa0.png');
 
   return (
     <ImageBackground

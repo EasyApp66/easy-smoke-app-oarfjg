@@ -95,6 +95,7 @@ export default function StatsScreen() {
   const isGerman = settings?.language === 'de';
 
   const titleText = isGerman ? 'Statistik' : 'Statistics';
+  const todayText = isGerman ? 'Heute' : 'Today';
   const last7DaysText = isGerman ? 'Letzte 7 Tage' : 'Last 7 Days';
   const weekOverviewText = isGerman ? 'Wochenübersicht' : 'Week Overview';
   const trendText = isGerman ? 'Dein Trend' : 'Your Trend';
@@ -106,6 +107,11 @@ export default function StatsScreen() {
   const avgPerDayValue = stats.avgPerDay.toString();
   const bestDayValue = `${stats.bestDay.count}`;
   const bestDayDate = stats.bestDay.date;
+  const premiumRequiredText = isGerman ? 'Premium erforderlich' : 'Premium Required';
+  const premiumDescText = isGerman 
+    ? 'Upgrade auf Premium für Wochenstatistiken und mehr' 
+    : 'Upgrade to Premium for weekly statistics and more';
+  const isPremium = settings?.premiumEnabled || false;
 
   if (isLoading) {
     return (
@@ -129,7 +135,7 @@ export default function StatsScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>{titleText}</Text>
-            <Text style={styles.subtitle}>{last7DaysText}</Text>
+            <Text style={styles.subtitle}>{isPremium ? last7DaysText : todayText}</Text>
           </View>
           <TouchableOpacity
             style={styles.refreshButton}
@@ -144,56 +150,99 @@ export default function StatsScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.card, { backgroundColor: cardColor }]}>
-          <Text style={styles.cardTitle}>{weekOverviewText}</Text>
-          <View style={styles.chartContainer}>
-            {stats.weeklyData.map((item, index) => (
-              <View key={index} style={styles.barContainer}>
-                <View style={styles.barWrapper}>
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height: item.smoked > 0 ? `${(item.smoked / 20) * 100}%` : 4,
-                        backgroundColor: item.smoked > 0 ? colors.primary : colors.border,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.dayLabel}>{item.day}</Text>
+        {isPremium ? (
+          <>
+            <View style={[styles.card, { backgroundColor: cardColor }]}>
+              <Text style={styles.cardTitle}>{weekOverviewText}</Text>
+              <View style={styles.chartContainer}>
+                {stats.weeklyData.map((item, index) => (
+                  <View key={index} style={styles.barContainer}>
+                    <View style={styles.barWrapper}>
+                      <View
+                        style={[
+                          styles.bar,
+                          {
+                            height: item.smoked > 0 ? `${(item.smoked / 20) * 100}%` : 4,
+                            backgroundColor: item.smoked > 0 ? colors.primary : colors.border,
+                          },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.dayLabel}>{item.day}</Text>
+                  </View>
+                ))}
               </View>
-            ))}
-          </View>
-        </View>
-
-        <View style={[styles.card, { backgroundColor: cardColor }]}>
-          <Text style={styles.cardTitle}>{trendText}</Text>
-          <View style={styles.trendContainer}>
-            <Text style={styles.trendValue}>{trendValue}</Text>
-            <View style={styles.trendIcon}>
-              <View style={styles.trendLine} />
             </View>
-          </View>
-        </View>
 
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: cardColor }]}>
-            <Text style={styles.statLabel}>{totalSmokedLabel}</Text>
-            <Text style={styles.statValue}>{totalSmokedValue}</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: cardColor }]}>
-            <Text style={styles.statLabel}>{avgPerDayLabel}</Text>
-            <Text style={styles.statValue}>{avgPerDayValue}</Text>
-          </View>
-        </View>
+            <View style={[styles.card, { backgroundColor: cardColor }]}>
+              <Text style={styles.cardTitle}>{trendText}</Text>
+              <View style={styles.trendContainer}>
+                <Text style={styles.trendValue}>{trendValue}</Text>
+                <View style={styles.trendIcon}>
+                  <View style={styles.trendLine} />
+                </View>
+              </View>
+            </View>
 
-        <View style={[styles.card, { backgroundColor: cardColor }]}>
-          <Text style={styles.cardTitle}>{bestDayLabel}</Text>
-          <View style={styles.bestDayContainer}>
-            <Text style={styles.bestDayValue}>{bestDayValue}</Text>
-            <Text style={styles.bestDayDate}>{bestDayDate}</Text>
-          </View>
-        </View>
+            <View style={styles.statsGrid}>
+              <View style={[styles.statCard, { backgroundColor: cardColor }]}>
+                <Text style={styles.statLabel}>{totalSmokedLabel}</Text>
+                <Text style={styles.statValue}>{totalSmokedValue}</Text>
+              </View>
+              <View style={[styles.statCard, { backgroundColor: cardColor }]}>
+                <Text style={styles.statLabel}>{avgPerDayLabel}</Text>
+                <Text style={styles.statValue}>{avgPerDayValue}</Text>
+              </View>
+            </View>
+
+            <View style={[styles.card, { backgroundColor: cardColor }]}>
+              <Text style={styles.cardTitle}>{bestDayLabel}</Text>
+              <View style={styles.bestDayContainer}>
+                <Text style={styles.bestDayValue}>{bestDayValue}</Text>
+                <Text style={styles.bestDayDate}>{bestDayDate}</Text>
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={[styles.card, { backgroundColor: cardColor }]}>
+              <Text style={styles.cardTitle}>{isGerman ? 'Heute' : 'Today'}</Text>
+              <View style={styles.todayStatsContainer}>
+                <View style={styles.todayStatItem}>
+                  <Text style={styles.todayStatLabel}>{isGerman ? 'Geraucht' : 'Smoked'}</Text>
+                  <Text style={styles.todayStatValue}>
+                    {stats.weeklyData[stats.weeklyData.length - 1]?.smoked || 0}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={[styles.premiumCard, { backgroundColor: cardColor }]}>
+              <View style={styles.premiumIconContainer}>
+                <IconSymbol
+                  ios_icon_name="lock.fill"
+                  android_material_icon_name="lock"
+                  size={48}
+                  color={colors.primary}
+                />
+              </View>
+              <Text style={styles.premiumTitle}>{premiumRequiredText}</Text>
+              <Text style={styles.premiumDescription}>{premiumDescText}</Text>
+              <TouchableOpacity
+                style={styles.premiumButton}
+                onPress={() => {
+                  setToastMessage(isGerman ? 'Premium-Funktion' : 'Premium Feature');
+                  setToastType('info');
+                  setToastVisible(true);
+                }}
+              >
+                <Text style={styles.premiumButtonText}>
+                  {isGerman ? 'Upgrade' : 'Upgrade'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </ScrollView>
 
       <Toast
@@ -343,5 +392,56 @@ const styles = StyleSheet.create({
   bestDayDate: {
     fontSize: 16,
     color: colors.textSecondary,
+  },
+  todayStatsContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  todayStatItem: {
+    alignItems: 'center',
+  },
+  todayStatLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 12,
+  },
+  todayStatValue: {
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+  premiumCard: {
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  premiumIconContainer: {
+    marginBottom: 16,
+  },
+  premiumTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  premiumDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  premiumButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 48,
+  },
+  premiumButtonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

@@ -64,7 +64,6 @@ function VerticalTimePicker({
     const index = Math.round(offsetY / ITEM_HEIGHT);
     if (index >= 0 && index < hours.length && hours[index] !== hourValue) {
       onHourChange(hours[index]);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
@@ -73,7 +72,6 @@ function VerticalTimePicker({
     const index = Math.round(offsetY / ITEM_HEIGHT);
     if (index >= 0 && index < minutes.length && minutes[index] !== minuteValue) {
       onMinuteChange(minutes[index]);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
@@ -170,7 +168,6 @@ function HorizontalCigarettePicker({
     const index = Math.round(offsetX / ITEM_WIDTH);
     if (index >= 0 && index < items.length && items[index] !== value) {
       onValueChange(items[index]);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
@@ -293,6 +290,36 @@ export default function HomeScreen() {
   useEffect(() => {
     loadDataForSelectedDay();
   }, [selectedDay, settings, currentLog]);
+
+  // Calculate time until alarm in minutes or hours
+  const calculateTimeUntilAlarm = (alarmTime: string): string => {
+    const now = new Date();
+    const [alarmHour, alarmMinute] = alarmTime.split(':').map(Number);
+    
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const alarmMinutes = alarmHour * 60 + alarmMinute;
+    
+    let diffMinutes = alarmMinutes - currentMinutes;
+    
+    // If alarm is tomorrow
+    if (diffMinutes < 0) {
+      diffMinutes += 24 * 60;
+    }
+    
+    const isGerman = settings?.language === 'de';
+    
+    if (diffMinutes < 60) {
+      return isGerman ? `in ${diffMinutes} min.` : `in ${diffMinutes} min.`;
+    } else {
+      const hours = Math.floor(diffMinutes / 60);
+      const mins = diffMinutes % 60;
+      if (mins === 0) {
+        return isGerman ? `in ${hours} Std.` : `in ${hours} hrs.`;
+      } else {
+        return isGerman ? `in ${hours} Std. ${mins} min.` : `in ${hours} hrs. ${mins} min.`;
+      }
+    }
+  };
 
   const calculateAlarms = (wake: string, sleep: string, goal: number) => {
     const [wh, wm] = wake.split(':').map(Number);
@@ -584,6 +611,7 @@ export default function HomeScreen() {
               {alarms.map((alarm, index) => {
                 const isChecked = checkedAlarms.has(index);
                 const isNextAlarm = index === nextAlarmIndex;
+                const timeUntilText = isNextAlarm ? calculateTimeUntilAlarm(alarm) : '';
 
                 return (
                   <TouchableOpacity
@@ -602,6 +630,11 @@ export default function HomeScreen() {
                       ]}>
                         {alarm}
                       </Text>
+                      {isNextAlarm && (
+                        <Text style={styles.timeUntilText}>
+                          {timeUntilText}
+                        </Text>
+                      )}
                     </View>
                     <View style={[
                       styles.alarmCheckbox,
@@ -704,7 +737,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   countValue: {
-    fontSize: 45,
+    fontSize: 38,
     fontWeight: 'bold',
     color: colors.primary,
     marginBottom: 6,
@@ -933,10 +966,16 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   bottomCountValue: {
-    fontSize: 45,
+    fontSize: 38,
     fontWeight: 'bold',
     color: colors.primary,
     marginBottom: 6,
+  },
+  timeUntilText: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   bottomCountLabel: {
     fontSize: 14,
