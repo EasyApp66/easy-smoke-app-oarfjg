@@ -2,6 +2,7 @@
 import React from 'react';
 import { NativeTabs, Icon } from 'expo-router/unstable-native-tabs';
 import { AppProvider } from '@/contexts/AppContext';
+import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
   return (

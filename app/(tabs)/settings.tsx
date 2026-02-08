@@ -153,7 +153,7 @@ function HorizontalCigarettePicker({
   onValueChange: (val: number) => void;
 }) {
   const items = Array.from({ length: 50 }, (_, i) => i + 1);
-  const ITEM_WIDTH = 100;
+  const ITEM_WIDTH = 80;
 
   const cigaretteScrollRef = React.useRef<ScrollView>(null);
 
@@ -285,7 +285,7 @@ export default function SettingsScreen() {
   const isGerman = settings?.language === 'de';
 
   const titleText = isGerman ? 'Einstellungen' : 'Settings';
-  const morningSetupText = isGerman ? 'Morgen einrichten' : 'Setup Tomorrow';
+  const morningSetupText = isGerman ? 'Heute einrichten' : 'Setup Today';
   const wakeTimeLabel = isGerman ? 'AUFSTEHZEIT' : 'WAKE TIME';
   const sleepTimeLabel = isGerman ? 'SCHLAFENSZEIT' : 'SLEEP TIME';
   const dailyGoalLabel = isGerman ? 'TÄGLICHE ZIGARETTEN' : 'DAILY CIGARETTES';
@@ -330,22 +330,22 @@ export default function SettingsScreen() {
 
           <View style={styles.timePickersRow}>
             <View style={styles.timePickerColumn}>
-              <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
-              <VerticalTimePicker
-                hourValue={sleepHour}
-                minuteValue={sleepMinute}
-                onHourChange={setSleepHour}
-                onMinuteChange={setSleepMinute}
-              />
-            </View>
-
-            <View style={styles.timePickerColumn}>
               <Text style={styles.timeLabel}>{wakeTimeLabel}</Text>
               <VerticalTimePicker
                 hourValue={wakeHour}
                 minuteValue={wakeMinute}
                 onHourChange={setWakeHour}
                 onMinuteChange={setWakeMinute}
+              />
+            </View>
+
+            <View style={styles.timePickerColumn}>
+              <Text style={styles.timeLabel}>{sleepTimeLabel}</Text>
+              <VerticalTimePicker
+                hourValue={sleepHour}
+                minuteValue={sleepMinute}
+                onHourChange={setSleepHour}
+                onMinuteChange={setSleepMinute}
               />
             </View>
           </View>
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
   setupHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 28,
     gap: 8,
   },
   setupTitle: {
@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
   timePickersRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 32,
     gap: 16,
   },
   timePickerColumn: {
@@ -645,13 +645,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.textSecondary,
     letterSpacing: 0.5,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   compactCigarettePickerContainer: {
     height: 80,
-    width: '100%',
+    width: 240,
     position: 'relative',
     overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cigarettePickerItem: {
     height: 80,
@@ -671,8 +673,8 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     left: '50%',
-    marginLeft: -50,
-    width: 100,
+    transform: [{ translateX: -40 }],
+    width: 80,
     backgroundColor: colors.primary,
     borderRadius: 16,
     opacity: 0.25,

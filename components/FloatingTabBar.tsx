@@ -8,7 +8,6 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { IconSymbol } from '@/components/IconSymbol';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@react-navigation/native';
@@ -20,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Href } from 'expo-router';
+import { colors } from '@/styles/commonStyles';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -162,7 +162,7 @@ export default function FloatingTabBar({
                       android_material_icon_name={tab.icon}
                       ios_icon_name={tab.icon}
                       size={26}
-                      color={isActive ? theme.colors.primary : 'rgba(255, 255, 255, 0.6)'}
+                      color={isActive ? colors.primary : 'rgba(255, 255, 255, 0.6)'}
                     />
                   </View>
                 </TouchableOpacity>
