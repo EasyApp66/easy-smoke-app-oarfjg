@@ -8,7 +8,7 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import { colors } from '@/styles/commonStyles';
+import { colors, getAccentColor } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
 import { IconSymbol } from '@/components/IconSymbol';
 import { Toast } from '@/components/ui/Toast';
@@ -33,6 +33,8 @@ export default function StatsScreen() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+
+  const currentAccentColor = getAccentColor(settings?.accentColor || 'green');
 
   useEffect(() => {
     loadStats();
@@ -145,7 +147,7 @@ export default function StatsScreen() {
               ios_icon_name="arrow.clockwise"
               android_material_icon_name="refresh"
               size={24}
-              color={colors.primary}
+              color={currentAccentColor}
             />
           </TouchableOpacity>
         </View>
@@ -163,7 +165,7 @@ export default function StatsScreen() {
                           styles.bar,
                           {
                             height: item.smoked > 0 ? `${(item.smoked / 20) * 100}%` : 4,
-                            backgroundColor: item.smoked > 0 ? colors.primary : colors.border,
+                            backgroundColor: item.smoked > 0 ? currentAccentColor : colors.border,
                           },
                         ]}
                       />
@@ -177,9 +179,9 @@ export default function StatsScreen() {
             <View style={[styles.card, { backgroundColor: cardColor }]}>
               <Text style={styles.cardTitle}>{trendText}</Text>
               <View style={styles.trendContainer}>
-                <Text style={styles.trendValue}>{trendValue}</Text>
+                <Text style={[styles.trendValue, { color: currentAccentColor }]}>{trendValue}</Text>
                 <View style={styles.trendIcon}>
-                  <View style={styles.trendLine} />
+                  <View style={[styles.trendLine, { backgroundColor: currentAccentColor }]} />
                 </View>
               </View>
             </View>
@@ -198,7 +200,7 @@ export default function StatsScreen() {
             <View style={[styles.card, { backgroundColor: cardColor }]}>
               <Text style={styles.cardTitle}>{bestDayLabel}</Text>
               <View style={styles.bestDayContainer}>
-                <Text style={styles.bestDayValue}>{bestDayValue}</Text>
+                <Text style={[styles.bestDayValue, { color: currentAccentColor }]}>{bestDayValue}</Text>
                 <Text style={styles.bestDayDate}>{bestDayDate}</Text>
               </View>
             </View>
@@ -210,7 +212,7 @@ export default function StatsScreen() {
               <View style={styles.todayStatsContainer}>
                 <View style={styles.todayStatItem}>
                   <Text style={styles.todayStatLabel}>{isGerman ? 'Geraucht' : 'Smoked'}</Text>
-                  <Text style={styles.todayStatValue}>
+                  <Text style={[styles.todayStatValue, { color: currentAccentColor }]}>
                     {stats.weeklyData[stats.weeklyData.length - 1]?.smoked || 0}
                   </Text>
                 </View>
@@ -223,13 +225,13 @@ export default function StatsScreen() {
                   ios_icon_name="lock.fill"
                   android_material_icon_name="lock"
                   size={48}
-                  color={colors.primary}
+                  color={currentAccentColor}
                 />
               </View>
               <Text style={styles.premiumTitle}>{premiumRequiredText}</Text>
               <Text style={styles.premiumDescription}>{premiumDescText}</Text>
               <TouchableOpacity
-                style={styles.premiumButton}
+                style={[styles.premiumButton, { backgroundColor: currentAccentColor }]}
                 onPress={() => {
                   setToastMessage(isGerman ? 'Premium-Funktion' : 'Premium Feature');
                   setToastType('info');

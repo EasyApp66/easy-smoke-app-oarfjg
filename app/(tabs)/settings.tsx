@@ -552,12 +552,6 @@ export default function SettingsScreen() {
               )}
             </TouchableOpacity>
           </View>
-          <View style={styles.accentColorLabels}>
-            <Text style={styles.accentColorLabel}>{isGerman ? 'Grün' : 'Green'}</Text>
-            <Text style={styles.accentColorLabel}>{isGerman ? 'Neon Gelb' : 'Neon Yellow'}</Text>
-            <Text style={styles.accentColorLabel}>{isGerman ? 'Neon Grün' : 'Neon Green'}</Text>
-            <Text style={styles.accentColorLabel}>{isGerman ? 'Hellblau' : 'Light Blue'}</Text>
-          </View>
         </View>
 
         <Text style={styles.sectionLabel}>{languageText}</Text>
@@ -882,7 +876,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     marginTop: 16,
-    marginBottom: 8,
   },
   accentColorButton: {
     flex: 1,
@@ -895,16 +888,6 @@ const styles = StyleSheet.create({
   },
   accentColorButtonActive: {
     borderColor: '#FFFFFF',
-  },
-  accentColorLabels: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  accentColorLabel: {
-    flex: 1,
-    fontSize: 11,
-    color: colors.textSecondary,
-    textAlign: 'center',
   },
   premiumCard: {
     borderRadius: 16,

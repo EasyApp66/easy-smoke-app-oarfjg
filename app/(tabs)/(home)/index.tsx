@@ -11,7 +11,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { colors } from '@/styles/commonStyles';
+import { colors, getAccentColor } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
 import { IconSymbol } from '@/components/IconSymbol';
 import * as Haptics from 'expo-haptics';
@@ -23,11 +23,13 @@ function VerticalTimePicker({
   minuteValue,
   onHourChange,
   onMinuteChange,
+  accentColor,
 }: {
   hourValue: number;
   minuteValue: number;
   onHourChange: (val: number) => void;
   onMinuteChange: (val: number) => void;
+  accentColor: string;
 }) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = [0, 15, 30, 45];
@@ -133,7 +135,7 @@ function VerticalTimePicker({
         </View>
       </View>
       
-      <View style={styles.verticalGreenLens} pointerEvents="none" />
+      <View style={[styles.verticalGreenLens, { backgroundColor: accentColor }]} pointerEvents="none" />
     </View>
   );
 }
@@ -142,9 +144,11 @@ function VerticalTimePicker({
 function HorizontalCigarettePicker({
   value,
   onValueChange,
+  accentColor,
 }: {
   value: number;
   onValueChange: (val: number) => void;
+  accentColor: string;
 }) {
   const items = Array.from({ length: 50 }, (_, i) => i + 1);
   const ITEM_WIDTH = 80;
@@ -198,7 +202,7 @@ function HorizontalCigarettePicker({
         })}
       </ScrollView>
       
-      <View style={styles.horizontalGreenLens} pointerEvents="none" />
+      <View style={[styles.horizontalGreenLens, { backgroundColor: accentColor }]} pointerEvents="none" />
     </View>
   );
 }
@@ -220,6 +224,8 @@ export default function HomeScreen() {
   const [showSetupModal, setShowSetupModal] = useState(false);
 
   const dayAnimation = useRef(new Animated.Value(0)).current;
+
+  const currentAccentColor = getAccentColor(settings?.accentColor || 'green');
 
   const getDatesForCalendar = () => {
     const today = new Date();
@@ -480,7 +486,7 @@ export default function HomeScreen() {
               key={index}
               style={[
                 styles.dayButton,
-                selectedDay === index && styles.dayButtonActive,
+                selectedDay === index && [styles.dayButtonActive, { backgroundColor: currentAccentColor }],
                 index > 2 && !settings?.premiumEnabled && styles.dayButtonLocked,
               ]}
               onPress={() => handleDayPress(index)}
@@ -507,7 +513,7 @@ export default function HomeScreen() {
 
         {isSetup && selectedDay === 2 && !showSetupModal && (
           <View style={[styles.countCard, { backgroundColor: cardColor }]}>
-            <Text style={styles.countValue}>{countDisplay}</Text>
+            <Text style={[styles.countValue, { color: currentAccentColor }]}>{countDisplay}</Text>
             <Text style={styles.countLabel}>{readyText}</Text>
           </View>
         )}
@@ -520,7 +526,7 @@ export default function HomeScreen() {
                   ios_icon_name="calendar"
                   android_material_icon_name="calendar-today"
                   size={18}
-                  color={colors.primary}
+                  color={currentAccentColor}
                 />
                 <Text style={styles.setupTitle}>{dynamicTitle}</Text>
               </View>
@@ -549,6 +555,7 @@ export default function HomeScreen() {
                   minuteValue={wakeMinute}
                   onHourChange={setWakeHour}
                   onMinuteChange={setWakeMinute}
+                  accentColor={currentAccentColor}
                 />
               </View>
 
@@ -561,6 +568,7 @@ export default function HomeScreen() {
                   minuteValue={sleepMinute}
                   onHourChange={setSleepHour}
                   onMinuteChange={setSleepMinute}
+                  accentColor={currentAccentColor}
                 />
               </View>
             </View>
@@ -572,11 +580,16 @@ export default function HomeScreen() {
               <HorizontalCigarettePicker
                 value={cigaretteGoal}
                 onValueChange={setCigaretteGoal}
+                accentColor={currentAccentColor}
               />
             </View>
 
             <TouchableOpacity
-              style={[styles.setupButton, isPastDay && styles.setupButtonDisabled]}
+              style={[
+                styles.setupButton,
+                { backgroundColor: currentAccentColor },
+                isPastDay && styles.setupButtonDisabled
+              ]}
               onPress={handleSetupDay}
               activeOpacity={0.8}
               disabled={isPastDay}
@@ -602,7 +615,7 @@ export default function HomeScreen() {
                   ios_icon_name="gear"
                   android_material_icon_name="settings"
                   size={20}
-                  color={colors.primary}
+                  color={currentAccentColor}
                 />
               </TouchableOpacity>
             </View>
@@ -618,8 +631,8 @@ export default function HomeScreen() {
                     key={index}
                     style={[
                       styles.alarmItem,
-                      isChecked && styles.alarmItemChecked,
-                      isNextAlarm && styles.alarmItemNext,
+                      isChecked && [styles.alarmItemChecked, { backgroundColor: currentAccentColor }],
+                      isNextAlarm && [styles.alarmItemNext, { borderColor: currentAccentColor }],
                     ]}
                     onPress={() => handleAlarmPress(index)}
                   >
@@ -631,14 +644,14 @@ export default function HomeScreen() {
                         {alarm}
                       </Text>
                       {isNextAlarm && (
-                        <Text style={styles.timeUntilText}>
+                        <Text style={[styles.timeUntilText, { color: currentAccentColor }]}>
                           {timeUntilText}
                         </Text>
                       )}
                     </View>
                     <View style={[
                       styles.alarmCheckbox,
-                      isChecked && styles.alarmCheckboxChecked,
+                      isChecked && [styles.alarmCheckboxChecked, { backgroundColor: currentAccentColor, borderColor: currentAccentColor }],
                     ]}>
                       {isChecked && (
                         <IconSymbol
@@ -655,7 +668,7 @@ export default function HomeScreen() {
             </ScrollView>
 
             <View style={styles.bottomCountContainer}>
-              <Text style={styles.bottomCountValue}>{countDisplay}</Text>
+              <Text style={[styles.bottomCountValue, { color: currentAccentColor }]}>{countDisplay}</Text>
               <Text style={styles.bottomCountLabel}>{readyText}</Text>
             </View>
           </View>

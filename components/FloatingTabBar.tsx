@@ -19,7 +19,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Href } from 'expo-router';
-import { colors } from '@/styles/commonStyles';
+import { colors, getAccentColor } from '@/styles/commonStyles';
+import { useApp } from '@/contexts/AppContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -47,6 +48,9 @@ export default function FloatingTabBar({
   const pathname = usePathname();
   const theme = useTheme();
   const animatedValue = useSharedValue(0);
+  const { settings } = useApp();
+
+  const currentAccentColor = getAccentColor(settings?.accentColor || 'green');
 
   const activeTabIndex = React.useMemo(() => {
     let bestMatch = -1;
@@ -162,7 +166,7 @@ export default function FloatingTabBar({
                       android_material_icon_name={tab.icon}
                       ios_icon_name={tab.icon}
                       size={26}
-                      color={isActive ? colors.primary : 'rgba(255, 255, 255, 0.6)'}
+                      color={isActive ? currentAccentColor : 'rgba(255, 255, 255, 0.6)'}
                     />
                   </View>
                 </TouchableOpacity>
