@@ -245,13 +245,13 @@ export default function HomeScreen() {
     if (offset === 0) {
       return isGerman ? 'Heute einrichten' : 'Setup Today';
     } else if (offset === 1) {
-      return isGerman ? 'Morgen einrichten' : 'Setup Tomorrow';
+      return isGerman ? 'Premium holen' : 'Get Premium';
     } else if (offset === -1) {
       return isGerman ? 'Gestern eingerichtet' : 'Setup Yesterday';
     } else if (offset < -1) {
       return isGerman ? 'Vergangener Tag' : 'Past Day';
     } else {
-      return isGerman ? 'Zukünftiger Tag' : 'Future Day';
+      return isGerman ? 'Premium holen' : 'Get Premium';
     }
   };
 
@@ -421,6 +421,12 @@ export default function HomeScreen() {
         return newSet;
       });
     }
+  };
+
+  const handlePremiumPurchase = () => {
+    console.log('User tapped Premium holen button');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // TODO: Backend Integration - Trigger Apple Pay for one-time payment (10 CHF)
   };
 
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;
@@ -677,24 +683,37 @@ export default function HomeScreen() {
                 color={currentAccentColor}
               />
               <Text style={styles.premiumModalTitle}>
-                {isGerman ? 'Premium Version' : 'Premium Version'}
+                {isGerman ? 'Premium holen' : 'Get Premium'}
               </Text>
               <Text style={styles.premiumModalText}>
                 {isGerman 
                   ? 'Hole dir die Premium Version der App, damit du zukünftige Tage schon einstellen kannst oder ein Ziel setzen kannst mit einer langsamen Zigarettenreduktion.'
                   : 'Get the Premium version of the app to set up future days or set a goal with gradual cigarette reduction.'}
               </Text>
-              <TouchableOpacity
-                style={[styles.premiumModalButton, { backgroundColor: currentAccentColor }]}
-                onPress={() => {
-                  setShowPremiumModal(false);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                }}
-              >
-                <Text style={styles.premiumModalButtonText}>
-                  {isGerman ? 'Verstanden' : 'Got it'}
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.premiumModalButtons}>
+                <TouchableOpacity
+                  style={[styles.premiumModalButtonSecondary, { borderColor: currentAccentColor }]}
+                  onPress={() => {
+                    setShowPremiumModal(false);
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                >
+                  <Text style={[styles.premiumModalButtonTextSecondary, { color: currentAccentColor }]}>
+                    {isGerman ? 'OK' : 'OK'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.premiumModalButton, { backgroundColor: currentAccentColor }]}
+                  onPress={() => {
+                    setShowPremiumModal(false);
+                    handlePremiumPurchase();
+                  }}
+                >
+                  <Text style={styles.premiumModalButtonText}>
+                    {isGerman ? 'Premium holen' : 'Get Premium'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </BlurView>
         </TouchableOpacity>
@@ -1043,14 +1062,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
   },
+  premiumModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
   premiumModalButton: {
+    flex: 1,
     borderRadius: 12,
     paddingVertical: 16,
-    paddingHorizontal: 48,
+    paddingHorizontal: 24,
     alignItems: 'center',
   },
   premiumModalButtonText: {
     color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  premiumModalButtonSecondary: {
+    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    borderWidth: 2,
+  },
+  premiumModalButtonTextSecondary: {
     fontSize: 16,
     fontWeight: '700',
   },

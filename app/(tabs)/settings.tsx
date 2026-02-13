@@ -298,9 +298,10 @@ export default function SettingsScreen() {
   const handlePremiumPurchase = (type: 'onetime' | 'monthly') => {
     console.log('User tapped premium purchase:', type);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setToastMessage(isGerman ? 'Premium-Kauf wird verarbeitet...' : 'Processing premium purchase...');
+    setToastMessage(isGerman ? 'Apple Pay wird geöffnet...' : 'Opening Apple Pay...');
     setToastType('info');
     setToastVisible(true);
+    // TODO: Backend Integration - Trigger Apple Pay payment
   };
 
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;
