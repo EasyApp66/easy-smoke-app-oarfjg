@@ -28,9 +28,23 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const [showLegal, setShowLegal] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     console.log('User tapped Go button');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    // Mark onboarding as seen
+    try {
+      if (Platform.OS === 'web') {
+        localStorage.setItem('hasSeenOnboarding', 'true');
+      } else {
+        const SecureStore = await import('expo-secure-store');
+        await SecureStore.setItemAsync('hasSeenOnboarding', 'true');
+      }
+      console.log('Onboarding marked as seen');
+    } catch (error) {
+      console.error('Error saving onboarding status:', error);
+    }
+    
     router.replace('/(tabs)/(home)');
   };
 

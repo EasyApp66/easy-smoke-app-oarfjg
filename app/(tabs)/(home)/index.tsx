@@ -10,7 +10,9 @@ import {
   Animated,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Modal,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { colors, getAccentColor } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -222,6 +224,7 @@ export default function HomeScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
   const [showSetupModal, setShowSetupModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const dayAnimation = useRef(new Animated.Value(0)).current;
 
@@ -398,9 +401,7 @@ export default function HomeScreen() {
     
     if (offset > 0 && !settings?.premiumEnabled) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setToastMessage('Premium erforderlich für zukünftige Tage');
-      setToastType('error');
-      setToastVisible(true);
+      setShowPremiumModal(true);
       return;
     }
     
@@ -447,7 +448,8 @@ export default function HomeScreen() {
   const isGerman = settings?.language === 'de';
 
   const checkedCount = checkedAlarms.size;
-  const countDisplay = `${checkedCount}`;
+  const totalCount = alarms.length;
+  const countDisplay = `${checkedCount} / ${totalCount}`;
   const readyText = isGerman ? 'Anzahl Zigaretten' : 'Cigarette Count';
 
   const dayNames = isGerman 
@@ -681,6 +683,49 @@ export default function HomeScreen() {
         visible={toastVisible}
         onHide={() => setToastVisible(false)}
       />
+
+      <Modal
+        visible={showPremiumModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPremiumModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowPremiumModal(false)}
+        >
+          <BlurView intensity={80} style={styles.blurView}>
+            <View style={[styles.premiumModal, { backgroundColor: cardColor }]}>
+              <IconSymbol
+                ios_icon_name="star.fill"
+                android_material_icon_name="star"
+                size={48}
+                color={currentAccentColor}
+              />
+              <Text style={styles.premiumModalTitle}>
+                {isGerman ? 'Premium Version' : 'Premium Version'}
+              </Text>
+              <Text style={styles.premiumModalText}>
+                {isGerman 
+                  ? 'Hole dir die Premium Version der App, damit du zukünftige Tage schon einstellen kannst oder ein Ziel setzen kannst mit einer langsamen Zigarettenreduktion.'
+                  : 'Get the Premium version of the app to set up future days or set a goal with gradual cigarette reduction.'}
+              </Text>
+              <TouchableOpacity
+                style={[styles.premiumModalButton, { backgroundColor: currentAccentColor }]}
+                onPress={() => {
+                  setShowPremiumModal(false);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                }}
+              >
+                <Text style={styles.premiumModalButtonText}>
+                  {isGerman ? 'Verstanden' : 'Got it'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </BlurView>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -750,7 +795,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   countValue: {
-    fontSize: 38,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.primary,
     marginBottom: 6,
@@ -979,7 +1024,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   bottomCountValue: {
-    fontSize: 38,
+    fontSize: 32,
     fontWeight: 'bold',
     color: colors.primary,
     marginBottom: 6,
@@ -993,5 +1038,48 @@ const styles = StyleSheet.create({
   bottomCountLabel: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blurView: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  premiumModal: {
+    borderRadius: 20,
+    padding: 32,
+    width: '85%',
+    alignItems: 'center',
+  },
+  premiumModalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginTop: 16,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  premiumModalText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  premiumModalButton: {
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 48,
+    alignItems: 'center',
+  },
+  premiumModalButtonText: {
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });

@@ -115,16 +115,16 @@ export default function FloatingTabBar({
   const dynamicStyles = {
     blurContainer: {
       ...styles.blurContainer,
-      backgroundColor: 'rgba(42, 42, 42, 0.3)',
+      backgroundColor: 'rgba(42, 42, 42, 0.5)',
       ...Platform.select({
         ios: {
-          backgroundColor: 'rgba(42, 42, 42, 0.3)',
+          backgroundColor: 'rgba(42, 42, 42, 0.5)',
         },
         android: {
-          backgroundColor: 'rgba(42, 42, 42, 0.3)',
+          backgroundColor: 'rgba(42, 42, 42, 0.5)',
         },
         web: {
-          backgroundColor: 'rgba(42, 42, 42, 0.3)',
+          backgroundColor: 'rgba(42, 42, 42, 0.5)',
           backdropFilter: 'blur(20px)',
         },
       }),

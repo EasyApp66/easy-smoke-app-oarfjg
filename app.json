@@ -1,4 +1,3 @@
-
 {
   "expo": {
     "name": "Easy Smoke",
@@ -37,7 +36,7 @@
       "expo-router",
       "expo-web-browser"
     ],
-    "scheme": "easysmoke",
+    "scheme": "Easy Smoke",
     "experiments": {
       "typedRoutes": true
     },

@@ -410,40 +410,107 @@ export default function SettingsScreen() {
         <View style={[styles.premiumCard, { backgroundColor: cardColor }]}>
           <Text style={styles.premiumBenefitsText}>{premiumBenefitsText}</Text>
           
-          <TouchableOpacity
-            style={styles.premiumOption}
-            onPress={() => handlePremiumPurchase('onetime')}
-          >
-            <View>
-              <Text style={styles.premiumOptionTitle}>{oneTimeText}</Text>
-              <Text style={[styles.premiumPrice, { color: currentAccentColor }]}>10 CHF</Text>
-            </View>
-            <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
-              size={24}
-              color={currentAccentColor}
-            />
-          </TouchableOpacity>
+          {!settings?.premiumEnabled && (
+            <>
+              <TouchableOpacity
+                style={styles.premiumOption}
+                onPress={() => handlePremiumPurchase('onetime')}
+              >
+                <View>
+                  <Text style={styles.premiumOptionTitle}>{oneTimeText}</Text>
+                  <Text style={[styles.premiumPrice, { color: currentAccentColor }]}>10 CHF</Text>
+                </View>
+                <IconSymbol
+                  ios_icon_name="chevron.right"
+                  android_material_icon_name="chevron-right"
+                  size={24}
+                  color={currentAccentColor}
+                />
+              </TouchableOpacity>
+              
+              <View style={styles.premiumDivider} />
+              
+              <TouchableOpacity
+                style={styles.premiumOption}
+                onPress={() => handlePremiumPurchase('monthly')}
+              >
+                <View>
+                  <Text style={styles.premiumOptionTitle}>{monthlyText}</Text>
+                  <Text style={[styles.premiumPrice, { color: currentAccentColor }]}>1 CHF / {isGerman ? 'Monat' : 'Month'}</Text>
+                </View>
+                <IconSymbol
+                  ios_icon_name="chevron.right"
+                  android_material_icon_name="chevron-right"
+                  size={24}
+                  color={currentAccentColor}
+                />
+              </TouchableOpacity>
+            </>
+          )}
           
-          <View style={styles.premiumDivider} />
-          
-          <TouchableOpacity
-            style={styles.premiumOption}
-            onPress={() => handlePremiumPurchase('monthly')}
-          >
-            <View>
-              <Text style={styles.premiumOptionTitle}>{monthlyText}</Text>
-              <Text style={[styles.premiumPrice, { color: currentAccentColor }]}>1 CHF / {isGerman ? 'Monat' : 'Month'}</Text>
+          {settings?.premiumEnabled && settings?.premiumType === 'lifetime' && (
+            <View style={styles.premiumStatusContainer}>
+              <View style={styles.premiumStatusRow}>
+                <IconSymbol
+                  ios_icon_name="checkmark.circle.fill"
+                  android_material_icon_name="check-circle"
+                  size={24}
+                  color={currentAccentColor}
+                />
+                <Text style={styles.premiumStatusText}>
+                  {isGerman ? 'Gekauft' : 'Purchased'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.switchToMonthlyButton, { borderColor: currentAccentColor }]}
+                onPress={() => handlePremiumPurchase('monthly')}
+              >
+                <Text style={[styles.switchToMonthlyText, { color: currentAccentColor }]}>
+                  {isGerman ? 'Auf Monatsabo wechseln' : 'Switch to Monthly'}
+                </Text>
+              </TouchableOpacity>
             </View>
-            <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
-              size={24}
-              color={currentAccentColor}
-            />
-          </TouchableOpacity>
+          )}
+          
+          {settings?.premiumEnabled && settings?.premiumType === 'monthly' && (
+            <View style={styles.premiumStatusContainer}>
+              <View style={styles.premiumStatusRow}>
+                <IconSymbol
+                  ios_icon_name="checkmark.circle.fill"
+                  android_material_icon_name="check-circle"
+                  size={24}
+                  color={currentAccentColor}
+                />
+                <Text style={styles.premiumStatusText}>
+                  {isGerman ? 'Aktives Abo' : 'Active Subscription'}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
+        
+        {settings?.premiumEnabled && settings?.premiumType === 'monthly' && (
+          <TouchableOpacity
+            style={[styles.settingRow, { backgroundColor: cardColor }]}
+            onPress={() => {
+              console.log('Manage subscription tapped');
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setToastMessage(isGerman ? 'Abo-Verwaltung öffnen...' : 'Opening subscription management...');
+              setToastType('info');
+              setToastVisible(true);
+            }}
+          >
+            <Text style={styles.settingTitle}>
+              {isGerman ? 'Abo verwalten' : 'Manage Subscription'}
+            </Text>
+            <IconSymbol
+              ios_icon_name="chevron.right"
+              android_material_icon_name="chevron-right"
+              size={24}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+        )}
 
         <Text style={styles.sectionLabel}>{appearanceText}</Text>
         <View style={[styles.card, { backgroundColor: cardColor }]}>
@@ -920,6 +987,30 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.border,
     marginVertical: 8,
+  },
+  premiumStatusContainer: {
+    paddingVertical: 12,
+  },
+  premiumStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  premiumStatusText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  switchToMonthlyButton: {
+    borderWidth: 2,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  switchToMonthlyText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
