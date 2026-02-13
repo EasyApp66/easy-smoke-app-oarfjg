@@ -1,7 +1,8 @@
+
 {
   "expo": {
     "name": "Easy Smoke",
-    "slug": "Easy Smoke",
+    "slug": "easy-smoke",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/fec24b4c-1505-4d2d-ad8a-723f4d69c22a.png",
@@ -36,7 +37,7 @@
       "expo-router",
       "expo-web-browser"
     ],
-    "scheme": "Easy Smoke",
+    "scheme": "easysmoke",
     "experiments": {
       "typedRoutes": true
     },
