@@ -1,23 +1,49 @@
 
 import React from 'react';
-import { NativeTabs, Icon } from 'expo-router/unstable-native-tabs';
+import { Tabs } from 'expo-router';
+import FloatingTabBar from '@/components/FloatingTabBar';
 import { AppProvider } from '@/contexts/AppContext';
-import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
   return (
     <AppProvider>
-      <NativeTabs>
-        <NativeTabs.Trigger key="home" name="(home)">
-          <Icon sf="house.fill" />
-        </NativeTabs.Trigger>
-        <NativeTabs.Trigger key="stats" name="stats">
-          <Icon sf="chart.bar.fill" />
-        </NativeTabs.Trigger>
-        <NativeTabs.Trigger key="settings" name="settings">
-          <Icon sf="gearshape.fill" />
-        </NativeTabs.Trigger>
-      </NativeTabs>
+      <Tabs
+        tabBar={(props) => (
+          <FloatingTabBar
+            {...props}
+            tabs={[
+              {
+                name: '(home)',
+                label: 'Home',
+                icon: 'home',
+                route: '/(tabs)/(home)',
+              },
+              {
+                name: 'stats',
+                label: 'Statistik',
+                icon: 'bar-chart',
+                route: '/(tabs)/stats',
+              },
+              {
+                name: 'settings',
+                label: 'Einstellungen',
+                icon: 'settings',
+                route: '/(tabs)/settings',
+              },
+            ]}
+            containerWidth={240}
+            borderRadius={30}
+            bottomMargin={20}
+          />
+        )}
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Tabs.Screen name="(home)" />
+        <Tabs.Screen name="stats" />
+        <Tabs.Screen name="settings" />
+      </Tabs>
     </AppProvider>
   );
 }

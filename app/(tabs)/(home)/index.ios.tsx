@@ -14,7 +14,6 @@ import {
 import { BlurView } from 'expo-blur';
 import { colors, getAccentColor } from '@/styles/commonStyles';
 import { IconSymbol } from '@/components/IconSymbol';
-import * as Haptics from 'expo-haptics';
 import { useApp } from '@/contexts/AppContext';
 
 // Vertical Time Picker Component
@@ -59,6 +58,7 @@ function VerticalTimePicker({
         });
       }, 100);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hourValue, minuteValue]);
 
   const handleHourScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -222,6 +222,24 @@ export default function HomeScreen() {
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const dayAnimation = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const currentAccentColor = getAccentColor(settings?.accentColor || 'green');
 
@@ -293,6 +311,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     loadDataForSelectedDay();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDay, settings, currentLog]);
 
   const calculateTimeUntilAlarm = (alarmTime: string): string => {
@@ -361,8 +380,6 @@ export default function HomeScreen() {
 
   const handleSetupDay = async () => {
     console.log('User tapped setup day button');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
     const wakeTimeStr = `${wakeHour.toString().padStart(2, '0')}:${wakeMinute.toString().padStart(2, '0')}`;
     const sleepTimeStr = `${sleepHour.toString().padStart(2, '0')}:${sleepMinute.toString().padStart(2, '0')}`;
     
@@ -380,12 +397,10 @@ export default function HomeScreen() {
     const offset = index - 2;
     
     if (offset > 0 && !settings?.premiumEnabled) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setShowPremiumModal(true);
       return;
     }
     
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedDay(index);
     
     Animated.spring(dayAnimation, {
@@ -398,14 +413,11 @@ export default function HomeScreen() {
 
   const handleEditAlarms = () => {
     console.log('User tapped edit alarms icon');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowSetupModal(true);
   };
 
   const handleAlarmPress = (index: number) => {
     console.log('User tapped alarm:', index);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
     const isChecked = checkedAlarms.has(index);
     
     if (isChecked) {
@@ -425,7 +437,6 @@ export default function HomeScreen() {
 
   const handlePremiumPurchase = () => {
     console.log('User tapped Premium holen button');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // TODO: Backend Integration - Trigger Apple Pay for one-time payment (10 CHF)
   };
 
@@ -468,6 +479,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
       >
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         <View style={styles.calendarContainer}>
           {days.map((day, index) => (
             <TouchableOpacity
@@ -521,7 +533,6 @@ export default function HomeScreen() {
               {isSetup && (
                 <TouchableOpacity onPress={() => {
                   setShowSetupModal(false);
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 }}>
                   <IconSymbol
                     ios_icon_name="xmark"
@@ -661,6 +672,7 @@ export default function HomeScreen() {
             </View>
           </View>
         )}
+        </Animated.View>
       </ScrollView>
 
       <Modal
@@ -695,7 +707,6 @@ export default function HomeScreen() {
                   style={[styles.premiumModalButtonSecondary, { borderColor: currentAccentColor }]}
                   onPress={() => {
                     setShowPremiumModal(false);
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   }}
                 >
                   <Text style={[styles.premiumModalButtonTextSecondary, { color: currentAccentColor }]}>

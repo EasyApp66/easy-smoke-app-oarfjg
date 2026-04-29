@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   Platform,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { colors, getAccentColor } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
@@ -36,8 +37,28 @@ export default function StatsScreen() {
 
   const currentAccentColor = getAccentColor(settings?.accentColor || 'green');
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadStats = async () => {
@@ -128,6 +149,7 @@ export default function StatsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>{titleText}</Text>
@@ -196,6 +218,7 @@ export default function StatsScreen() {
             <Text style={styles.bestDayDate}>{bestDayDate}</Text>
           </View>
         </View>
+        </Animated.View>
       </ScrollView>
 
       <Toast

@@ -166,11 +166,11 @@ export interface Statistics {
     date: string;
     count: number;
   };
-  weeklyData: Array<{
+  weeklyData: {
     date: string;
     smoked: number;
     goal: number;
-  }>;
+  }[];
   trend: 'stable' | 'improving' | 'worsening';
 }
 

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,13 +12,13 @@ import {
   Switch,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Animated,
 } from 'react-native';
 import { colors, accentColors, getAccentColor } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
 import { IconSymbol } from '@/components/IconSymbol';
 import { LegalModal } from '@/components/LegalModal';
 import { BlurView } from 'expo-blur';
-import * as Haptics from 'expo-haptics';
 import { Toast } from '@/components/ui/Toast';
 
 // Vertical Time Picker Component
@@ -63,6 +63,7 @@ function VerticalTimePicker({
         });
       }, 100);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hourValue, minuteValue]);
 
   const handleHourScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -70,7 +71,6 @@ function VerticalTimePicker({
     const index = Math.round(offsetY / ITEM_HEIGHT);
     if (index >= 0 && index < hours.length && hours[index] !== hourValue) {
       onHourChange(hours[index]);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
@@ -79,7 +79,6 @@ function VerticalTimePicker({
     const index = Math.round(offsetY / ITEM_HEIGHT);
     if (index >= 0 && index < minutes.length && minutes[index] !== minuteValue) {
       onMinuteChange(minutes[index]);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
@@ -178,7 +177,6 @@ function HorizontalCigarettePicker({
     const index = Math.round(offsetX / ITEM_WIDTH);
     if (index >= 0 && index < items.length && items[index] !== value) {
       onValueChange(items[index]);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
@@ -229,6 +227,25 @@ export default function SettingsScreen() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   React.useEffect(() => {
     if (settings) {
       const [wh, wm] = settings.wakeTime.split(':').map(Number);
@@ -249,18 +266,15 @@ export default function SettingsScreen() {
       setToastMessage(isGerman ? 'Premium erforderlich' : 'Premium required');
       setToastType('error');
       setToastVisible(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
     
     console.log('User changed background color to:', color);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await updateSettings({ backgroundColor: color });
   };
 
   const handleAccentColorChange = async (color: 'green' | 'neonYellow' | 'neonGreen' | 'lightBlue') => {
     console.log('User changed accent color to:', color);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await updateSettings({ accentColor: color });
     setToastMessage(isGerman ? 'Akzentfarbe geändert' : 'Accent color changed');
     setToastType('success');
@@ -269,7 +283,6 @@ export default function SettingsScreen() {
 
   const handleLanguageChange = async (lang: 'de' | 'en') => {
     console.log('User changed language to:', lang);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await updateSettings({ language: lang });
     setToastMessage(lang === 'de' ? 'Sprache auf Deutsch geändert' : 'Language changed to English');
     setToastType('success');
@@ -278,7 +291,6 @@ export default function SettingsScreen() {
 
   const handlePromoCodeSubmit = async () => {
     console.log('User submitted promo code:', promoCode);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const isValid = await validatePromoCode(promoCode);
     if (isValid) {
       setShowPromoInput(false);
@@ -286,18 +298,15 @@ export default function SettingsScreen() {
       setToastMessage(isGerman ? 'Promo Code erfolgreich aktiviert!' : 'Promo code activated successfully!');
       setToastType('success');
       setToastVisible(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       setToastMessage(isGerman ? 'Ungültiger Promo Code' : 'Invalid promo code');
       setToastType('error');
       setToastVisible(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     }
   };
 
   const handlePremiumPurchase = (type: 'onetime' | 'monthly') => {
     console.log('User tapped premium purchase:', type);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setToastMessage(isGerman ? 'Apple Pay wird geöffnet...' : 'Opening Apple Pay...');
     setToastType('info');
     setToastVisible(true);
@@ -344,6 +353,7 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
       >
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
         <Text style={styles.title}>{titleText}</Text>
 
         <View style={[styles.setupCard, { backgroundColor: cardColor }]}>
@@ -400,7 +410,6 @@ export default function SettingsScreen() {
             value={applyToAllDays}
             onValueChange={(value) => {
               setApplyToAllDays(value);
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             }}
             trackColor={{ false: colors.border, true: currentAccentColor }}
             thumbColor={colors.text}
@@ -495,7 +504,6 @@ export default function SettingsScreen() {
             style={[styles.settingRow, { backgroundColor: cardColor }]}
             onPress={() => {
               console.log('Manage subscription tapped');
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setToastMessage(isGerman ? 'Abo-Verwaltung öffnen...' : 'Opening subscription management...');
               setToastType('info');
               setToastVisible(true);
@@ -645,7 +653,6 @@ export default function SettingsScreen() {
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
             console.log('Promo code tapped');
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setShowPromoInput(true);
           }}
         >
@@ -662,7 +669,6 @@ export default function SettingsScreen() {
           style={[styles.settingRow, { backgroundColor: cardColor }]}
           onPress={() => {
             console.log('Legal tapped');
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setShowLegal(true);
           }}
         >
@@ -674,6 +680,7 @@ export default function SettingsScreen() {
             color={colors.textSecondary}
           />
         </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
 
       <LegalModal

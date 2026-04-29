@@ -32,6 +32,7 @@ export function Toast({ message, type = 'info', visible, onHide, duration = 3000
         onHide();
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
   if (!visible) return null;
