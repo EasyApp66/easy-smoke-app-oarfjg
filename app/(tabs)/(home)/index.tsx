@@ -15,6 +15,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { colors, getAccentColor } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { IconSymbol } from '@/components/IconSymbol';
 import { Toast } from '@/components/ui/Toast';
 
@@ -210,7 +211,8 @@ function HorizontalCigarettePicker({
 }
 
 export default function HomeScreen() {
-  const { settings, currentLog, setupDay, incrementCigarettes, isLoading, getLogForSpecificDate, saveLogForDate } = useApp();
+  const { settings, currentLog, setupDay, incrementCigarettes, isLoading, getLogForSpecificDate, saveLogForDate, updateSettings } = useApp();
+  const { purchasePackage, offerings } = useSubscription();
   const [wakeHour, setWakeHour] = useState(6);
   const [wakeMinute, setWakeMinute] = useState(0);
   const [sleepHour, setSleepHour] = useState(23);
@@ -453,12 +455,45 @@ export default function HomeScreen() {
     }
   };
 
-  const handlePremiumPurchase = () => {
+  const handlePremiumPurchase = async () => {
     console.log('User tapped Premium holen button');
-    setToastMessage(isGerman ? 'Apple Pay wird geöffnet...' : 'Opening Apple Pay...');
-    setToastType('info');
-    setToastVisible(true);
-    // TODO: Backend Integration - Trigger Apple Pay for one-time payment (10 CHF)
+    const availablePackages = offerings?.current?.availablePackages ?? [];
+
+    const pkg = availablePackages.find(
+      (p) => p.packageType === 'LIFETIME' || p.identifier.includes('lifetime') || p.identifier.includes('onetime')
+    ) ?? availablePackages[0] ?? null;
+
+    if (!pkg) {
+      console.warn('[Premium] No package found for one-time purchase');
+      setToastMessage(isGerman ? 'Kein Angebot verfügbar' : 'No offering available');
+      setToastType('error');
+      setToastVisible(true);
+      return;
+    }
+
+    console.log('[Premium] Purchasing package:', pkg.identifier);
+    try {
+      const success = await purchasePackage(pkg);
+      if (success) {
+        console.log('[Premium] Purchase successful');
+        await updateSettings({ premiumEnabled: true, premiumType: 'lifetime' });
+        setShowPremiumModal(false);
+        setToastMessage(isGerman ? 'Premium aktiviert!' : 'Premium activated!');
+        setToastType('success');
+        setToastVisible(true);
+      }
+    } catch (error: any) {
+      const msg = String(error?.message || error || '');
+      console.log('[Premium] Purchase error:', msg);
+      if (msg.toLowerCase().includes('cancelled') || msg.toLowerCase().includes('usercancelled')) {
+        setToastMessage(isGerman ? 'Kauf abgebrochen' : 'Purchase cancelled');
+        setToastType('info');
+      } else {
+        setToastMessage(msg || (isGerman ? 'Kauf fehlgeschlagen' : 'Purchase failed'));
+        setToastType('error');
+      }
+      setToastVisible(true);
+    }
   };
 
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;

@@ -1,22 +1,22 @@
 
 import { WidgetProvider } from "@/contexts/WidgetContext";
-import { AppProvider } from "@/contexts/AppContext";
+import { AppProvider, useApp } from "@/contexts/AppContext";
+import { SubscriptionProvider, useSubscription } from "@/contexts/SubscriptionContext";
 import {
   DarkTheme,
-  DefaultTheme,
-  Theme,
   ThemeProvider,
 } from "@react-navigation/native";
 import { useColorScheme, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import React, { useEffect, useState } from "react";
 import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments, usePathname, Redirect } from "expo-router";
 import { SystemBars } from "react-native-edge-to-edge";
 import "react-native-reanimated";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import * as SecureStore from "expo-secure-store";
+import { isOnboardingComplete } from "@/utils/onboardingStorage";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,6 +24,15 @@ function RootLayoutNav() {
   const router = useRouter();
   const segments = useSegments();
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+
+  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    isOnboardingComplete().then((complete) => {
+      setOnboardingComplete(complete);
+    });
+  }, [pathname]);
 
   useEffect(() => {
     async function checkOnboarding() {
@@ -55,16 +64,62 @@ function RootLayoutNav() {
   }, [segments]);
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="+not-found" />
-    </Stack>
+    <SubscriptionProvider>
+      {onboardingComplete === false && pathname !== "/auth" && pathname !== "/paywall" && pathname !== "/auth-popup" && pathname !== "/auth-callback" && (
+        <Redirect href="/onboarding" />
+      )}
+      <SubscriptionRedirect />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+    </SubscriptionProvider>
   );
+}
+
+
+function SubscriptionRedirect() {
+  const { isSubscribed, loading } = useSubscription();
+  const { settings } = useApp();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // If the user has premium enabled via AppContext (e.g. promo code or previous purchase),
+  // treat them as subscribed so they are not redirected to the paywall.
+  const hasPremium = isSubscribed || settings?.premiumEnabled === true;
+
+  useEffect(() => {
+    if (loading) return;
+    const onOnboarding = pathname.startsWith("/onboarding");
+    if (onOnboarding) return;
+
+    let cancelled = false;
+    isOnboardingComplete().then((done) => {
+      if (cancelled) return;
+      if (!done) return;
+      const onPaywall = pathname === "/paywall";
+      if (onPaywall) return;
+      if (!hasPremium) {
+        router.replace("/paywall");
+      }
+    }).catch(() => {
+      if (cancelled) return;
+      const onPaywall = pathname === "/paywall";
+      if (onPaywall) return;
+      if (!hasPremium) {
+        router.replace("/paywall");
+      }
+    });
+    return () => { cancelled = true; };
+  }, [hasPremium, loading, pathname]);
+
+  return null;
 }
 
 export default function RootLayout() {

@@ -13,9 +13,11 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   Animated,
+  Linking,
 } from 'react-native';
 import { colors, accentColors, getAccentColor } from '@/styles/commonStyles';
 import { useApp } from '@/contexts/AppContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { IconSymbol } from '@/components/IconSymbol';
 import { LegalModal } from '@/components/LegalModal';
 import { BlurView } from 'expo-blur';
@@ -217,6 +219,7 @@ function HorizontalCigarettePicker({
 
 export default function SettingsScreen() {
   const { settings, updateSettings, validatePromoCode, getDeviceId } = useApp();
+  const { purchasePackage, offerings } = useSubscription();
   const router = useRouter();
   const [showLegal, setShowLegal] = useState(false);
   const [showPromoInput, setShowPromoInput] = useState(false);
@@ -311,12 +314,51 @@ export default function SettingsScreen() {
     }
   };
 
-  const handlePremiumPurchase = (type: 'onetime' | 'monthly') => {
+  const handlePremiumPurchase = async (type: 'onetime' | 'monthly') => {
     console.log('User tapped premium purchase:', type);
-    setToastMessage(isGerman ? 'Apple Pay wird geöffnet...' : 'Opening Apple Pay...');
-    setToastType('info');
-    setToastVisible(true);
-    // TODO: Backend Integration - Trigger Apple Pay payment
+    const availablePackages = offerings?.current?.availablePackages ?? [];
+
+    let pkg = null;
+    if (type === 'onetime') {
+      pkg = availablePackages.find(
+        (p) => p.packageType === 'LIFETIME' || p.identifier.includes('lifetime') || p.identifier.includes('onetime')
+      ) ?? availablePackages[0] ?? null;
+    } else {
+      pkg = availablePackages.find(
+        (p) => p.packageType === 'MONTHLY' || p.identifier.includes('monthly')
+      ) ?? availablePackages[0] ?? null;
+    }
+
+    if (!pkg) {
+      console.warn('[Premium] No package found for type:', type);
+      setToastMessage(isGerman ? 'Kein Angebot verfügbar' : 'No offering available');
+      setToastType('error');
+      setToastVisible(true);
+      return;
+    }
+
+    console.log('[Premium] Purchasing package:', pkg.identifier, 'type:', type);
+    try {
+      const success = await purchasePackage(pkg);
+      if (success) {
+        console.log('[Premium] Purchase successful, type:', type);
+        await updateSettings({ premiumEnabled: true, premiumType: type === 'onetime' ? 'lifetime' : 'monthly' });
+        setToastMessage(isGerman ? 'Premium aktiviert!' : 'Premium activated!');
+        setToastType('success');
+        setToastVisible(true);
+      }
+    } catch (error: any) {
+      const msg = String(error?.message || error || '');
+      console.log('[Premium] Purchase error:', msg);
+      if (msg.toLowerCase().includes('cancelled') || msg.toLowerCase().includes('usercancelled')) {
+        setToastMessage(isGerman ? 'Kauf abgebrochen' : 'Purchase cancelled');
+        setToastType('info');
+      } else {
+        setToastMessage(msg || (isGerman ? 'Kauf fehlgeschlagen' : 'Purchase failed'));
+        setToastType('error');
+      }
+      setToastVisible(true);
+    }
   };
 
   const handleDeleteData = async () => {
@@ -579,9 +621,10 @@ export default function SettingsScreen() {
             style={[styles.settingRow, { backgroundColor: cardColor }]}
             onPress={() => {
               console.log('Manage subscription tapped');
-              setToastMessage(isGerman ? 'Abo-Verwaltung öffnen...' : 'Opening subscription management...');
-              setToastType('info');
-              setToastVisible(true);
+              const url = Platform.OS === 'android'
+                ? 'https://play.google.com/store/account/subscriptions'
+                : 'https://apps.apple.com/account/subscriptions';
+              Linking.openURL(url);
             }}
           >
             <Text style={styles.settingTitle}>

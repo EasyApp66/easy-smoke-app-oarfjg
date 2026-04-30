@@ -4,8 +4,11 @@ import { Tabs } from 'expo-router';
 import FloatingTabBar from '@/components/FloatingTabBar';
 import { colors } from '@/styles/commonStyles';
 import { AppProvider } from '@/contexts/AppContext';
+import { useSubscriptionGuard } from "@/hooks/useSubscriptionGuard";
 
 export default function TabLayout() {
+  useSubscriptionGuard();
+
   return (
     <AppProvider>
       <Tabs
