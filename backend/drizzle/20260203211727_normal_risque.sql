@@ -1,4 +1,4 @@
-CREATE TABLE "scheduled_alarms" (
+CREATE TABLE IF NOT EXISTS "scheduled_alarms" (
 	"id" text PRIMARY KEY NOT NULL,
 	"device_id" text NOT NULL,
 	"date" date NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE "scheduled_alarms" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "smoking_logs" (
+CREATE TABLE IF NOT EXISTS "smoking_logs" (
 	"id" text PRIMARY KEY NOT NULL,
 	"device_id" text NOT NULL,
 	"date" date NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE "smoking_logs" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "user_settings" (
+CREATE TABLE IF NOT EXISTS "user_settings" (
 	"id" text PRIMARY KEY NOT NULL,
 	"device_id" text NOT NULL,
 	"wake_time" text NOT NULL,
@@ -31,5 +31,5 @@ CREATE TABLE "user_settings" (
 	CONSTRAINT "user_settings_device_id_unique" UNIQUE("device_id")
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX "scheduled_alarms_device_date_idx" ON "scheduled_alarms" USING btree ("device_id","date");--> statement-breakpoint
-CREATE UNIQUE INDEX "smoking_logs_device_date_idx" ON "smoking_logs" USING btree ("device_id","date");
+CREATE UNIQUE INDEX IF NOT EXISTS "scheduled_alarms_device_date_idx" ON "scheduled_alarms" USING btree ("device_id","date");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "smoking_logs_device_date_idx" ON "smoking_logs" USING btree ("device_id","date");
