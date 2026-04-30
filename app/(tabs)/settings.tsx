@@ -20,6 +20,9 @@ import { IconSymbol } from '@/components/IconSymbol';
 import { LegalModal } from '@/components/LegalModal';
 import { BlurView } from 'expo-blur';
 import { Toast } from '@/components/ui/Toast';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { BACKEND_URL } from '@/utils/api';
 
 // Vertical Time Picker Component
 function VerticalTimePicker({
@@ -213,9 +216,12 @@ function HorizontalCigarettePicker({
 }
 
 export default function SettingsScreen() {
-  const { settings, updateSettings, validatePromoCode } = useApp();
+  const { settings, updateSettings, validatePromoCode, getDeviceId } = useApp();
+  const router = useRouter();
   const [showLegal, setShowLegal] = useState(false);
   const [showPromoInput, setShowPromoInput] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletingData, setIsDeletingData] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [wakeHour, setWakeHour] = useState(6);
   const [wakeMinute, setWakeMinute] = useState(0);
@@ -311,6 +317,75 @@ export default function SettingsScreen() {
     setToastType('info');
     setToastVisible(true);
     // TODO: Backend Integration - Trigger Apple Pay payment
+  };
+
+  const handleDeleteData = async () => {
+    console.log('User confirmed data deletion');
+    setIsDeletingData(true);
+
+    const deviceId = await getDeviceId();
+
+    // Call backend DELETE endpoint
+    try {
+      console.log('[DeleteData] Sending DELETE /api/user-data for deviceId:', deviceId);
+      const response = await fetch(`${BACKEND_URL}/api/user-data`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[DeleteData] Backend error:', response.status, errorText);
+        setToastMessage(isGerman ? 'Fehler beim Löschen auf dem Server' : 'Error deleting data on server');
+        setToastType('error');
+        setToastVisible(true);
+      } else {
+        console.log('[DeleteData] Backend deletion successful');
+      }
+    } catch (error) {
+      console.error('[DeleteData] Network error:', error);
+      setToastMessage(isGerman ? 'Netzwerkfehler beim Löschen' : 'Network error during deletion');
+      setToastType('error');
+      setToastVisible(true);
+    }
+
+    // Clear all local storage regardless of backend result
+    try {
+      const knownKeys = ['appSettings', 'deviceId', 'hasSeenOnboarding'];
+      if (Platform.OS === 'web') {
+        knownKeys.forEach((key) => {
+          try { localStorage.removeItem(key); } catch {}
+        });
+        // Clear log keys for past 30 days
+        for (let i = 0; i < 30; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0];
+          try { localStorage.removeItem(`log_${dateStr}`); } catch {}
+          try { localStorage.removeItem(`alarms_${dateStr}`); } catch {}
+        }
+      } else {
+        for (const key of knownKeys) {
+          try { await SecureStore.deleteItemAsync(key); } catch {}
+        }
+        // Clear log keys for past 30 days
+        for (let i = 0; i < 30; i++) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const dateStr = d.toISOString().split('T')[0];
+          try { await SecureStore.deleteItemAsync(`log_${dateStr}`); } catch {}
+          try { await SecureStore.deleteItemAsync(`alarms_${dateStr}`); } catch {}
+        }
+      }
+      console.log('[DeleteData] Local storage cleared');
+    } catch (error) {
+      console.error('[DeleteData] Error clearing local storage:', error);
+    }
+
+    setIsDeletingData(false);
+    setShowDeleteModal(false);
+    console.log('[DeleteData] Navigating to onboarding');
+    router.replace('/');
   };
 
   const bgColor = settings?.backgroundColor === 'black' ? colors.backgroundBlack : colors.backgroundGray;
@@ -680,6 +755,24 @@ export default function SettingsScreen() {
             color={colors.textSecondary}
           />
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.settingRow, { backgroundColor: cardColor }]}
+          onPress={() => {
+            console.log('User tapped Daten löschen');
+            setShowDeleteModal(true);
+          }}
+        >
+          <Text style={[styles.settingTitle, { color: '#FF3B30' }]}>
+            {isGerman ? 'Daten löschen' : 'Delete Data'}
+          </Text>
+          <IconSymbol
+            ios_icon_name="trash"
+            android_material_icon_name="delete"
+            size={24}
+            color="#FF3B30"
+          />
+        </TouchableOpacity>
         </Animated.View>
       </ScrollView>
 
@@ -717,6 +810,57 @@ export default function SettingsScreen() {
               >
                 <Text style={styles.promoButtonText}>{applyText}</Text>
               </TouchableOpacity>
+            </View>
+          </BlurView>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => !isDeletingData && setShowDeleteModal(false)}
+        >
+          <BlurView intensity={80} style={styles.blurView}>
+            <View style={[styles.promoModal, { backgroundColor: cardColor }]}>
+              <Text style={styles.promoTitle}>
+                {isGerman ? 'Daten löschen' : 'Delete Data'}
+              </Text>
+              <Text style={styles.deleteModalBody}>
+                {isGerman
+                  ? 'Alle deine Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.'
+                  : 'All your data will be permanently deleted. This action cannot be undone.'}
+              </Text>
+              <View style={styles.deleteModalButtons}>
+                <TouchableOpacity
+                  style={[styles.deleteModalButtonCancel, { borderColor: colors.textSecondary }]}
+                  onPress={() => {
+                    console.log('User cancelled data deletion');
+                    setShowDeleteModal(false);
+                  }}
+                  disabled={isDeletingData}
+                >
+                  <Text style={[styles.deleteModalButtonCancelText, { color: colors.text }]}>
+                    {isGerman ? 'Abbrechen' : 'Cancel'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.deleteModalButtonDelete}
+                  onPress={handleDeleteData}
+                  disabled={isDeletingData}
+                >
+                  <Text style={styles.deleteModalButtonDeleteText}>
+                    {isDeletingData
+                      ? (isGerman ? 'Löschen...' : 'Deleting...')
+                      : (isGerman ? 'Löschen' : 'Delete')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </BlurView>
         </TouchableOpacity>
@@ -1058,6 +1202,39 @@ const styles = StyleSheet.create({
   promoButtonText: {
     color: '#000000',
     fontSize: 16,
+    fontWeight: '700',
+  },
+  deleteModalBody: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 24,
+  },
+  deleteModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  deleteModalButtonCancel: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  deleteModalButtonCancelText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  deleteModalButtonDelete: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    backgroundColor: '#FF3B30',
+  },
+  deleteModalButtonDeleteText: {
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: '700',
   },
 });
